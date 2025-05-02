@@ -53,10 +53,10 @@ class rce_bot {
     try {
       // Create MySQL connection pool using environment variables
       this.client.database_connection = createPool({
-        host: process.env.DATABASE_HOST,
-        user: process.env.DATABASE_USER,
-        password: process.env.DATABASE_PASSWORD,
-        database: process.env.DATABASE_NAME,
+        host: process.env.DATABASE_HOST || process.env.MYSQLHOST,
+        user: process.env.DATABASE_USER || process.env.MYSQLUSER,
+        password: process.env.DATABASE_PASSWORD || process.env.MYSQLPASSWORD,
+        database: process.env.DATABASE_NAME || process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE,
       });
       this.client.functions.log(
         'debug',
