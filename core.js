@@ -149,7 +149,7 @@ class rce_bot {
         },
         {
           level: LogLevel.Info,
-          file: "rce.log"
+          
         }
       );
       this.client.functions.log('info', '[RCE] Successfully authenticated with GPortal.');
