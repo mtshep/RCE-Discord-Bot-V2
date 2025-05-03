@@ -70,16 +70,24 @@ module.exports = {
         await client.database_connection.execute(
           `INSERT INTO servers (
             identifier, region, server_id, guild_id, guild_owner,
-            npc_kill_points, npc_death_points, player_kill_points, player_death_points, suicide_points,
-            enabled
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            category_id, linked_role_id, link_channel_id, kill_feeds_channel_id,
+            events_channel_id, stats_channel_id, chat_logs_channel_id,
+            item_spawning_channel_id, kits_logs_channel_id, team_logs_channel_id,
+            teleport_logs_channel_id, shop_channel_id, settings_channel_id,
+            npc_kill_points, npc_death_points, player_kill_points,
+            player_death_points, suicide_points, enabled
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             identifier,
             region,
             serverId,
             guild.id,
             guild.ownerId,
-            1, 1, 1, 1, 0, // Default points
+            null, null, null, null,
+            null, null, null,
+            null, null, null,
+            null, null, null,
+            1, 1, 1, 1, 0,
             true
           ]
         );
@@ -90,16 +98,20 @@ module.exports = {
         });
       } catch (err) {
         console.error("[ADD SERVER] DB INSERT ERROR:", err);
-        if (!interaction.replied) {
-          await interaction.reply({
-            content: `❌ Failed to save server: ${err.message}`,
-            ephemeral: true,
-          });
-        } else {
-          await interaction.followUp({
-            content: `❌ Follow-up error: ${err.message}`,
-            ephemeral: true,
-          });
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({
+              content: `❌ Failed to save server: ${err.message}`,
+              ephemeral: true,
+            });
+          } else {
+            await interaction.followUp({
+              content: `❌ Follow-up error: ${err.message}`,
+              ephemeral: true,
+            });
+          }
+        } catch (followupError) {
+          console.error("Failed to reply or follow up:", followupError);
         }
       }
     });
