@@ -5,7 +5,7 @@ const fs = require('fs');
 const { RCEManager, LogLevel, RCEIntent } = require('rce.js');
 const stats = require('./database.js');
 const { createPool } = require('mysql2/promise');
-
+require('./commands/admin/add').initModalHandler(client);
 class rce_bot {
   constructor() {
     // Initialize Discord client with various settings and intents
