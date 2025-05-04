@@ -34,4 +34,5 @@
     "mysql2": "^3.9.2",
     "rce.js": "github:b1nzeex/rce.js"
   }
+  {"delete-slash-commands": "node delete_all_slash_commands.js"}
 }
