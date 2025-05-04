@@ -4,7 +4,7 @@
   "description": "A Discord Bot For Rust Console Community Servers",
   "main": "bot.js",
   "scripts": {
-    "start": "cls && node bot.js",
+    "start": "node bot.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "delete-slash-commands": "node delete_all_slash_commands.js"
   },
@@ -13,8 +13,6 @@
     "url": "git+https://github.com/KyleFardy/RCE-Discord-Bot-V2.git"
   },
   "keywords": [
-    "rce",
-    "bot",
     "rce",
     "bot",
     "discord"
@@ -35,5 +33,4 @@
     "mysql2": "^3.9.2",
     "rce.js": "github:b1nzeex/rce.js"
   }
- 
 }
