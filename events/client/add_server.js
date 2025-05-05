@@ -21,7 +21,7 @@ module.exports = {
 
 async function handle_add_modal(interaction, client) {
   const identifier = process.env.DEFAULT_IDENTIFIER;
-  const server_region = process.env.DEFAULT_REGION;
+  const server_region = "EU"
   const server_id = process.env.DEFAULT_SERVER_ID;
   
 
