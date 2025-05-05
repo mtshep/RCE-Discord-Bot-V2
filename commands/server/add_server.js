@@ -347,7 +347,6 @@ async function handle_add_error(interaction, error) {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-} = require('discord.js');
 const { RCEIntent } = require('rce.js');
 
 module.exports = {
