@@ -20,10 +20,9 @@ module.exports = {
 };
 
 async function handle_add_modal(interaction, client) {
-
-  const identifier = interaction.fields.getTextInputValue('identifier');
+  const identifier = process.env.DEFAULT_IDENTIFIER;
   const server_region = "EU"
-  const server_id = interaction.fields.getTextInputValue('server_id');
+  const server_id = process.env.DEFAULT_SERVER_ID;
   
 
   if (hasEmptyFields(identifier, server_region, server_id)) {
