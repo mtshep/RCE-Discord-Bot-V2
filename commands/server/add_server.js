@@ -36,7 +36,12 @@ module.exports = {
       .setStyle('Short')
       .setRequired(true);
 
-
+    const server_region = new TextInputBuilder()
+      .setCustomId('server_region')
+      .setPlaceholder('Either EU/US')
+      .setLabel('Server Region')
+      .setStyle('Short')
+      .setRequired(true);
 
     const server_id = new TextInputBuilder()
       .setCustomId('server_id')
@@ -48,6 +53,7 @@ module.exports = {
     // Add all text inputs into action rows
     modal.addComponents(
       new ActionRowBuilder().addComponents(identifier),
+      new ActionRowBuilder().addComponents(server_region),
       new ActionRowBuilder().addComponents(server_id)
     );
 
