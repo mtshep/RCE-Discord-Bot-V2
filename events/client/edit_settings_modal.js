@@ -64,13 +64,13 @@ module.exports = {
         );
 
         await interaction.reply({
-          content: `✅ Settings updated for server: **${serverId}**`,
+          content: `âœ… Settings updated for server: **${serverId}**`,
           ephemeral: true,
         });
       } catch (err) {
         console.error(`[EDIT SETTINGS] Failed to update:`, err);
         await interaction.reply({
-          content: `❌ Failed to update settings: ${err.message}`,
+          content: `âŒ Failed to update settings: ${err.message}`,
           ephemeral: true,
         });
       }
