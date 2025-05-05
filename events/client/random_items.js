@@ -26,7 +26,7 @@ async function start_random_items_interval(client) {
         server.players
       );
     });
-  }, 1 * 30 * 1000);
+  }, 1 * 20 * 1000);
 }
 
 async function log_initialization_error(client, error) {
