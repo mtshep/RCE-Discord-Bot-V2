@@ -82,10 +82,6 @@ class STATS {
             available_on_shop BOOLEAN DEFAULT FALSE
           );
         `,
-      }
-        
-   
-        
       },
       {
         name: 'servers',
