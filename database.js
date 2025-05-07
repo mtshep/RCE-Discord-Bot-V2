@@ -211,7 +211,7 @@ class STATS {
           const rewardValue = item.reward_value || null;
           const price = item.price || 0; // Default value
           const quantity = item.quantity || 1; // Default value
-          const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : false;
+          const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : true;
 
           await this.client.database_connection.execute(
             `INSERT INTO shop_items (item_id, name, shortname, image, category, reward_type, reward_value, price, quantity, available_on_shop)
