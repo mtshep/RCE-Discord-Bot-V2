@@ -65,6 +65,44 @@ const {
   
         return embed;
       };
+
+      const { StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder } = require('discord.js');
+
+// Fetch available servers for the guild
+const [serverRows] = await client.database_connection.query(
+  'SELECT identifier, region, server_id FROM servers WHERE guild_id = ?',
+  [interaction.guild.id]
+);
+
+if (serverRows.length === 0) {
+  return await interaction.reply({
+    content: 'No linked servers found for this Discord. Please link a server first.',
+    ephemeral: true,
+  });
+}
+
+// Build dropdown options from server list
+const serverOptions = serverRows.map(server => ({
+  label: `${server.identifier} (${server.region})`,
+  value: `${server.server_id}|${server.region}`, // encode values
+}));
+
+const serverEmbed = new EmbedBuilder()
+  .setColor('Blurple')
+  .setTitle('🖥 Select Your Server')
+  .setDescription('Choose the server you want to use for purchases.')
+  .setFooter({ text: 'Dumz Paradise Shop' });
+
+const selectMenu = new StringSelectMenuBuilder()
+  .setCustomId('select_shop_server')
+  .setPlaceholder('Select a server...')
+  .addOptions(serverOptions);
+
+await interaction.reply({
+  embeds: [serverEmbed],
+  components: [new ActionRowBuilder().addComponents(selectMenu)],
+  ephemeral: true,
+});
   
       const renderSelectMenu = (page) => {
         return new ActionRowBuilder().addComponents(
@@ -116,6 +154,9 @@ const {
         } else if (i.customId === 'select_item') {
           const selectedId = parseInt(i.values[0]);
           const item = items.find(it => it.id === selectedId);
+          if (!item) {
+            return await i.reply({ content: '❌ Invalid item selected.', ephemeral: true });
+          }
           basket.push(item);
           await i.reply({ content: `🛍️ Added **${item.name}** to basket!`, ephemeral: true });
         } else if (i.customId === 'checkout') {
@@ -124,13 +165,16 @@ const {
             return i.reply({ content: `❌ Not enough Dumz Dollars! You need ${total}, but only have ${player.currency}.`, ephemeral: true });
           }
   
-          // Deduct currency
-          await client.database_connection.query(
-            'UPDATE players SET currency = currency - ? WHERE id = ?',
-            [total, player.id]
-          );
+          try {
+            await client.database_connection.query(
+              'UPDATE players SET currency = currency - ? WHERE id = ?',
+              [total, player.id]
+            );
+          } catch (err) {
+            console.error('Failed to deduct currency:', err);
+            return i.reply({ content: '❌ Failed to process your purchase. Please try again later.', ephemeral: true });
+          }
   
-          // Issue all rewards
           for (const item of basket) {
             if (item.reward_type === 'kit') {
               const server = await client.functions.get_server(client, player.server);
@@ -145,6 +189,14 @@ const {
             components: [],
           });
         }
+      });
+  
+      collector.on('end', async () => {
+        await interaction.editReply({
+          content: '⏳ Shop session expired. Please use `/shop` to start again.',
+          embeds: [],
+          components: [],
+        });
       });
     },
   };
