@@ -185,77 +185,41 @@ query: `
       });
   }
 
-  async function populateShopItemsFromJSON() {
-    const path = require('path');
-    const fs = require('fs');
-  
+  async populateShopItems() {
     try {
       const filePath = path.join(__dirname, 'items.json');
-      const rawData = fs.readFileSync(filePath);
+      const rawData = await fs.promises.readFile(filePath, 'utf-8');
       const items = JSON.parse(rawData);
-  
+
       for (const item of items) {
-        await client.database_connection.execute(
-          `INSERT INTO shop_items (name, description, reward_type, reward_value, price, issue, quantity, available_on_shop)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            item.name,
-            item.description || '',
-            item.reward_type || 'kit',
-            item.reward_value || item.name,
-            item.price || 0,
-            item.issue || '',
-            item.quantity || 0,
-            item.available_on_shop || false,
-          ]
-        );
+        try {
+          await this.client.database_connection.execute(
+            `INSERT INTO shop_items (name, description, reward_type, reward_value, price, issue, quantity, available_on_shop)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              item.name,
+              item.description || '',
+              item.reward_type || 'kit',
+              item.reward_value || item.name,
+              item.price || 0,
+              item.issue || '',
+              item.quantity || 0,
+              item.available_on_shop || false,
+            ]
+          );
+        } catch (err) {
+          await this.client.functions.log(
+            'error',
+            `[DATABASE] Failed to insert item "${item.name}": ${err.message}`
+          );
+        }
       }
-  
-      console.log('[DATABASE] shop_items populated successfully.');
+
+      await this.client.functions.log('debug', '[DATABASE] shop_items populated successfully.');
     } catch (err) {
-      console.error('[DATABASE] Failed to populate shop_items:', err.message);
+      await this.client.functions.log('error', '[DATABASE] Failed to populate shop_items: ' + err.message);
     }
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
+}
 
 module.exports = STATS;
