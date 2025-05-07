@@ -7,7 +7,30 @@ const {
     EmbedBuilder,
   } = require('discord.js');
   
-  module.exports = {
+const fs = require('fs');
+const path = require('path');
+
+function load_commands(client) {
+  const commandFolders = fs.readdirSync('./commands').filter(folder => {
+    const folderPath = path.join('./commands', folder);
+    return fs.statSync(folderPath).isDirectory(); // Only include directories
+  });
+
+  for (const folder of commandFolders) {
+    const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+
+    for (const file of commandFiles) {
+      const command = require(`./commands/${folder}/${file}`);
+      if (command.data && command.execute) {
+        client.commands.set(command.data.name, command);
+      } else {
+        console.warn(`[WARNING] The command at ./commands/${folder}/${file} is missing "data" or "execute".`);
+      }
+    }
+  }
+}
+
+module.exports = {
     data: new SlashCommandBuilder()
       .setName('shop')
       .setDescription('Browse and buy items using Dumz Dollars'),
