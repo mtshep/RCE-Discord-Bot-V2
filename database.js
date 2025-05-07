@@ -69,18 +69,22 @@ class STATS {
       },
       {
         name: 'shop',
-        query: `
-          CREATE TABLE IF NOT EXISTS shop_items (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(50),
-            description TEXT,
-            price INT,
-            reward_type ENUM('role', 'kit', 'code'),
-            reward_value VARCHAR(100),
-            issue VARCHAR(100),
-            quantity INT DEFAULT 0,
-            available_on_shop BOOLEAN DEFAULT FALSE
-          );`,
+query: `
+  CREATE TABLE IF NOT EXISTS shop_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    price INT NOT NULL,
+    reward_type ENUM('role', 'kit', 'code') NOT NULL,
+    reward_value VARCHAR(100),
+    issue VARCHAR(100),
+    quantity INT DEFAULT 0,
+    available_on_shop BOOLEAN DEFAULT FALSE
+  );
+`,
+        
+   
+        
       },
       {
         name: 'servers',
@@ -183,7 +187,7 @@ class STATS {
 
   async populateShopItems() {
     try {
-      const filePath = path.join(__dirname, 'items.json');
+      const items = JSON.parse(fs.readFileSync('./items.json', 'utf-8'));
       const itemsData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       for (const item of itemsData) {
