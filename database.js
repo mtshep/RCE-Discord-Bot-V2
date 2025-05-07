@@ -129,7 +129,7 @@ class STATS {
     const checkTableExists = async (tableName) => {
       try {
         await this.client.database_connection.execute(
-          `SELECT 1 FROM \\`${tableName}\\` LIMIT 1`
+          `SELECT 1 FROM \`${tableName}\` LIMIT 1`
         );
         return true;
       } catch (err) {
