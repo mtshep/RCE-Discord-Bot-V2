@@ -197,20 +197,20 @@ query: `
             `INSERT INTO shop_items (name, description, reward_type, reward_value, price, issue, quantity, available_on_shop)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-              item.name,
-              item.description || '',
+              item.name || null,
+              item.description || null,
               item.reward_type || 'kit',
-              item.reward_value || item.name,
+              item.reward_value || item.name || null,
               item.price || 0,
-              item.issue || '',
+              item.issue || null,
               item.quantity || 0,
-              item.available_on_shop || false,
+              item.available_on_shop !== undefined ? item.available_on_shop : false,
             ]
           );
         } catch (err) {
           await this.client.functions.log(
             'error',
-            `[DATABASE] Failed to insert item "${item.name}": ${err.message}`
+            `[DATABASE] Failed to insert item "${item.name || 'undefined'}": ${err.message}`
           );
         }
       }
