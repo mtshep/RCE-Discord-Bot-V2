@@ -71,16 +71,29 @@ class STATS {
         name: 'shop',
         query: `
           CREATE TABLE IF NOT EXISTS shop_items (
-            id VARCHAR(50) PRIMARY KEY,
-            name VARCHAR(100),
-            shortname VARCHAR(100),
-            image TEXT,
-            reward_type ENUM('role', 'kit', 'code') DEFAULT 'kit',
-            reward_value VARCHAR(100),
-            price INT DEFAULT 0,
-            quantity INT DEFAULT 1,
-            available_on_shop BOOLEAN DEFAULT FALSE
-          );
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          item_id VARCHAR(50), -- ← Add this line for external IDs
+          item_id VARCHAR(50),             -- from item.id
+          name VARCHAR(100),               -- from item.displayName
+          shortname VARCHAR(100),          -- from item.shortName
+          image TEXT,                      -- from item.image
+          category VARCHAR(100),           -- from item.category
+          reward_type VARCHAR(50) DEFAULT 'kit',
+          reward_value VARCHAR(100),
+          price INT DEFAULT 0,
+          quantity INT DEFAULT 1,
+          available_on_shop BOOLEAN DEFAULT FALSE
+);
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
         `,
       },
       {
@@ -202,14 +215,15 @@ class STATS {
           const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : false;
 
           await this.client.database_connection.execute(
-            `INSERT INTO shop_items (id, name, shortname, image, reward_type, reward_value, price, quantity, available_on_shop)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+            `INSERT INTO shop_items (item_id, name, shortname, image, category, reward_type, reward_value, price, quantity, available_on_shop)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE 
                name=VALUES(name), shortname=VALUES(shortname), image=VALUES(image),
-               reward_type=VALUES(reward_type), reward_value=VALUES(reward_value),
+               category=VALUES(category), reward_type=VALUES(reward_type), reward_value=VALUES(reward_value),
                price=VALUES(price), quantity=VALUES(quantity), available_on_shop=VALUES(available_on_shop)`,
-            [id, name, shortname, image, rewardType, rewardValue, price, quantity, availableOnShop]
+            [item.id, name, shortname, image, item.category || null, rewardType, rewardValue, price, quantity, availableOnShop]
           );
+        
         } catch (err) {
           // Improved error logging
           await this.client.functions.log(
