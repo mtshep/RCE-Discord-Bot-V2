@@ -69,19 +69,20 @@ class STATS {
       },
       {
         name: 'shop',
-query: `
-  CREATE TABLE IF NOT EXISTS shop_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    description TEXT,
-    price INT NOT NULL,
-    reward_type ENUM('role', 'kit', 'code') NOT NULL,
-    reward_value VARCHAR(100),
-    issue VARCHAR(100),
-    quantity INT DEFAULT 0,
-    available_on_shop BOOLEAN DEFAULT FALSE
-  );
-`,
+        query: `
+          CREATE TABLE IF NOT EXISTS shop_items (
+            id VARCHAR(50) PRIMARY KEY,
+            name VARCHAR(100),
+            shortname VARCHAR(100),
+            image TEXT,
+            reward_type ENUM('role', 'kit', 'code') DEFAULT 'kit',
+            reward_value VARCHAR(100),
+            price INT DEFAULT 0,
+            quantity INT DEFAULT 1,
+            available_on_shop BOOLEAN DEFAULT FALSE
+          );
+        `,
+      }
         
    
         
@@ -193,24 +194,31 @@ query: `
 
       for (const item of items) {
         try {
+          // Ensure all fields have valid values or default to null
+          const id = item.id || null;
+          const name = item.displayName || null;
+          const shortname = item.shortName || null;
+          const image = item.image || null;
+          const rewardType = 'kit'; // Default value
+          const rewardValue = item.displayName || null;
+          const price = item.price || 0; // Default value
+          const quantity = item.quantity || 1; // Default value
+          const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : false;
+
           await this.client.database_connection.execute(
-            `INSERT INTO shop_items (name, description, reward_type, reward_value, price, issue, quantity, available_on_shop)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              item.name || null,
-              item.description || null,
-              item.reward_type || 'kit',
-              item.reward_value || item.name || null,
-              item.price || 0,
-              item.issue || null,
-              item.quantity || 0,
-              item.available_on_shop !== undefined ? item.available_on_shop : false,
-            ]
+            `INSERT INTO shop_items (id, name, shortname, image, reward_type, reward_value, price, quantity, available_on_shop)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+             ON DUPLICATE KEY UPDATE 
+               name=VALUES(name), shortname=VALUES(shortname), image=VALUES(image),
+               reward_type=VALUES(reward_type), reward_value=VALUES(reward_value),
+               price=VALUES(price), quantity=VALUES(quantity), available_on_shop=VALUES(available_on_shop)`,
+            [id, name, shortname, image, rewardType, rewardValue, price, quantity, availableOnShop]
           );
         } catch (err) {
+          // Improved error logging
           await this.client.functions.log(
             'error',
-            `[DATABASE] Failed to insert item "${item.name || 'undefined'}": ${err.message}`
+            `[DATABASE] Failed to insert item "${item.displayName || item.id || 'unknown'}": ${err.message}`
           );
         }
       }
