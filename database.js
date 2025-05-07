@@ -72,12 +72,11 @@ class STATS {
         query: `
           CREATE TABLE IF NOT EXISTS shop_items (
           id INT AUTO_INCREMENT PRIMARY KEY,
-          item_id VARCHAR(50), -- ← Add this line for external IDs
-          item_id VARCHAR(50),             -- from item.id
-          name VARCHAR(100),               -- from item.displayName
-          shortname VARCHAR(100),          -- from item.shortName
-          image TEXT,                      -- from item.image
-          category VARCHAR(100),           -- from item.category
+          item_id VARCHAR(50),           
+          name VARCHAR(100),             
+          shortname VARCHAR(100),        
+          image TEXT,                    
+          category VARCHAR(100),         
           reward_type VARCHAR(50) DEFAULT 'kit',
           reward_value VARCHAR(100),
           price INT DEFAULT 0,
