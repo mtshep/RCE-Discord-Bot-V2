@@ -195,8 +195,8 @@ class STATS {
           const name = item.displayName || null;
           const shortname = item.shortName || null;
           const image = item.image || null;
-          const rewardType = 'kit'; // Default value
-          const rewardValue = item.displayName || null;
+          const rewardType = item.reward_type || 'kit'; // Default value
+          const rewardValue = item.reward_value || null;
           const price = item.price || 0; // Default value
           const quantity = item.quantity || 1; // Default value
           const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : false;
@@ -214,7 +214,7 @@ class STATS {
           // Improved error logging
           await this.client.functions.log(
             'error',
-            `[DATABASE] Failed to insert item "${item.displayName || item.id || 'unknown'}": ${err.message}`
+            `[DATABASE] Failed to insert item: ${JSON.stringify(item)} - Error: ${err.message}`
           );
         }
       }
