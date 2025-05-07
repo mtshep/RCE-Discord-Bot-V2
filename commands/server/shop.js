@@ -1,75 +1,80 @@
-// File: commands/shop/view_shop.js
 const {
     SlashCommandBuilder,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    EmbedBuilder,
+    EmbedBuilder
   } = require('discord.js');
   
   module.exports = {
     data: new SlashCommandBuilder()
-      .setName('shop')
-      .setDescription('Browse the in-game shop.'),
+      .setName('buy')
+      .setDescription('Buy an item from the shop')
+      .addIntegerOption(option =>
+        option.setName('item_id')
+          .setDescription('The ID of the item you want to buy')
+          .setRequired(true)
+      ),
   
-    async execute(interaction, client) {
-      const [rows] = await client.database_connection.execute('SELECT * FROM shop_items');
-      if (!rows.length) {
-        return await interaction.reply({ content: 'The shop is currently empty.', ephemeral: true });
-      }
+    async execute(interaction) {
+      const itemId = interaction.options.getInteger('item_id');
+      const playerName = interaction.member.displayName;
+      const guildId = interaction.guild.id;
   
-      const itemsPerPage = 5;
-      const pages = Math.ceil(rows.length / itemsPerPage);
-  
-      const generateEmbed = (page) => {
-        const embed = new EmbedBuilder()
-          .setColor('#00AAFF')
-          .setTitle('🛒 Dumz Paradise Shop')
-          .setFooter({ text: `Page ${page + 1} of ${pages}` })
-          .setTimestamp();
-  
-        const start = page * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageItems = rows.slice(start, end);
-  
-        pageItems.forEach((item) => {
-          embed.addFields({
-            name: `${item.name} - 💵 ${item.price}`,
-            value: `${item.description}\nReward: ${item.reward_type} (${item.reward_value})`,
-            inline: false,
-          });
-        });
-  
-        return embed;
-      };
-  
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('shop_prev')
-          .setLabel('Previous')
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId('shop_next')
-          .setLabel('Next')
-          .setStyle(ButtonStyle.Primary)
+      const server = await interaction.client.functions.get_server_discord(
+        interaction.client,
+        guildId
       );
   
-      const currentPage = 0;
-      const embed = generateEmbed(currentPage);
+      try {
+        const [[item]] = await interaction.client.database_connection.execute(
+          'SELECT * FROM shop_items WHERE id = ?',
+          [itemId]
+        );
   
-      const response = await interaction.reply({
-        embeds: [embed],
-        components: [row],
-        ephemeral: true,
-        fetchReply: true,
-      });
+        if (!item) {
+          return await interaction.reply({
+            content: '❌ Item not found.',
+            ephemeral: true
+          });
+        }
   
-      client.shopPagination = client.shopPagination || new Map();
-      client.shopPagination.set(interaction.user.id, {
-        messageId: response.id,
-        currentPage,
-        items: rows,
-      });
-    },
+        const balance = await interaction.client.player_stats.get_points(
+          server,
+          playerName
+        );
+  
+        if (balance < item.price) {
+          return await interaction.reply({
+            content: `❌ You need ${item.price} points but only have ${balance}.`,
+            ephemeral: true
+          });
+        }
+  
+        await interaction.client.player_stats.remove_points(
+          server,
+          playerName,
+          item.price
+        );
+  
+        if (item.reward_type === 'kit') {
+          await interaction.client.rce.sendCommand(
+            server.identifier,
+            `givekit ${playerName} ${item.reward_value}`
+          );
+        }
+  
+        const embed = new EmbedBuilder()
+          .setTitle('✅ Purchase Successful!')
+          .setDescription(`You bought **${item.name}** for **${item.price}** Dumz Dollars.`)
+          .setColor('Green')
+          .setTimestamp();
+  
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+  
+      } catch (err) {
+        console.error('[SHOP BUY ERROR]', err);
+        await interaction.reply({
+          content: '⚠️ There was an error processing your purchase.',
+          ephemeral: true
+        });
+      }
+    }
   };
-  
