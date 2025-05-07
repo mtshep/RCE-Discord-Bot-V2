@@ -65,7 +65,7 @@ class STATS {
       },
       {
         name: 'shop',
-        query:'
+        query:`
         CREATE TABLE shop_items (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50),
@@ -73,8 +73,8 @@ class STATS {
         price INT,
         reward_type ENUM('role', 'kit', 'code'),
         reward_value VARCHAR(100)
-      );',
-    }
+      );`,
+    },
       {
         name: 'servers',
         query: `
