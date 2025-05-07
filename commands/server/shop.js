@@ -1,202 +1,180 @@
 const {
     SlashCommandBuilder,
     ActionRowBuilder,
-    StringSelectMenuBuilder,
     ButtonBuilder,
-    ButtonStyle,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
     EmbedBuilder,
+    ComponentType,
   } = require('discord.js');
   
   module.exports = {
-    data: new SlashCommandBuilder()
-      .setName('shop')
-      .setDescription('Browse and buy items using Dumz Dollars'),
+    data: new SlashCommandBuilder().setName('shop').setDescription('Browse and buy items from the Dumz Paradise shop.'),
   
     async execute(interaction, client) {
-      const userId = interaction.user.id;
+      await interaction.deferReply({ ephemeral: true });
   
-      // Fetch player info
-      const [playerRows] = await client.database_connection.query(
-        'SELECT * FROM players WHERE discord_id = ?',
-        [userId]
-      );
-  
-      if (!playerRows.length) {
-        return interaction.reply({
-          content: '⚠️ You must be linked to use the shop.',
-          ephemeral: true,
-        });
-      }
-  
-      const player = playerRows[0];
-  
-      // Get all available items
-      const [items] = await client.database_connection.query(
+      const [rows] = await client.database_connection.query(
         'SELECT * FROM shop_items WHERE available_on_shop = TRUE'
       );
   
-      if (!items.length) {
-        return interaction.reply({ content: '🚫 No items are currently for sale.', ephemeral: true });
+      if (!rows.length) {
+        return interaction.editReply({ content: 'No items are available in the shop currently.' });
       }
   
-      // Group by category
-      const categories = [...new Set(items.map(item => item.category))];
-      const pages = categories.map(category => ({
-        category,
-        items: items.filter(item => item.category === category),
-      }));
+      const categories = [...new Set(rows.map((item) => item.category))];
   
-      let currentPage = 0;
-      const basket = [];
-  
-      const renderEmbed = (page) => {
-        const embed = new EmbedBuilder()
-          .setTitle(`🛒 ${pages[page].category} Shop`)
-          .setDescription(`Select an item to add to your basket.\nYour Dumz Balance: **${player.currency}**`)
-          .setFooter({ text: `Page ${page + 1} of ${pages.length}` })
-          .setColor('Green');
-  
-        for (const item of pages[page].items.slice(0, 10)) {
-          embed.addFields({
-            name: `${item.name} - ${item.price} 💰`,
-            value: item.description || item.shortname || 'No description',
-          });
-        }
-  
-        return embed;
-      };
-
-      const { StringSelectMenuBuilder, ActionRowBuilder, EmbedBuilder } = require('discord.js');
-
-// Fetch available servers for the guild
-const [serverRows] = await client.database_connection.query(
-  'SELECT identifier, region, server_id FROM servers WHERE guild_id = ?',
-  [interaction.guild.id]
-);
-
-if (serverRows.length === 0) {
-  return await interaction.reply({
-    content: 'No linked servers found for this Discord. Please link a server first.',
-    ephemeral: true,
-  });
-}
-
-// Build dropdown options from server list
-const serverOptions = serverRows.map(server => ({
-  label: `${server.identifier} (${server.region})`,
-  value: `${server.server_id}|${server.region}`, // encode values
-}));
-
-const serverEmbed = new EmbedBuilder()
-  .setColor('Blurple')
-  .setTitle('🖥 Select Your Server')
-  .setDescription('Choose the server you want to use for purchases.')
-  .setFooter({ text: 'Dumz Paradise Shop' });
-
-const selectMenu = new StringSelectMenuBuilder()
-  .setCustomId('select_shop_server')
-  .setPlaceholder('Select a server...')
-  .addOptions(serverOptions);
-
-await interaction.reply({
-  embeds: [serverEmbed],
-  components: [new ActionRowBuilder().addComponents(selectMenu)],
-  ephemeral: true,
-});
-  
-      const renderSelectMenu = (page) => {
-        return new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId('select_item')
-            .setPlaceholder('Select an item to add to basket')
-            .addOptions(
-              pages[page].items.slice(0, 25).map(item => ({
-                label: item.name,
-                value: item.id.toString(),
-                description: `Price: ${item.price} 💰`,
-              }))
-            )
+      const categoryMenu = new StringSelectMenuBuilder()
+        .setCustomId('shop_category_select')
+        .setPlaceholder('Select a category')
+        .addOptions(
+          categories.map((category) =>
+            new StringSelectMenuOptionBuilder().setLabel(category).setValue(category)
+          )
         );
-      };
   
-      const renderButtons = () => {
-        return new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('prev').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId('checkout').setLabel('✅ Checkout').setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId('next').setLabel('➡️ Next').setStyle(ButtonStyle.Secondary)
-        );
-      };
+      const categoryRow = new ActionRowBuilder().addComponents(categoryMenu);
   
-      await interaction.reply({
-        embeds: [renderEmbed(currentPage)],
-        components: [renderSelectMenu(currentPage), renderButtons()],
-        ephemeral: true,
+      const filter = (i) => i.user.id === interaction.user.id;
+  
+      const msg = await interaction.editReply({
+        content: 'Choose a category to browse items:',
+        components: [categoryRow],
       });
   
-      const collector = interaction.channel.createMessageComponentCollector({
-        time: 120_000,
-        filter: (i) => i.user.id === userId,
+      const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.StringSelect,
+        time: 60000,
       });
   
-      collector.on('collect', async (i) => {
-        if (i.customId === 'next') {
-          currentPage = (currentPage + 1) % pages.length;
-          await i.update({
-            embeds: [renderEmbed(currentPage)],
-            components: [renderSelectMenu(currentPage), renderButtons()],
-          });
-        } else if (i.customId === 'prev') {
-          currentPage = (currentPage - 1 + pages.length) % pages.length;
-          await i.update({
-            embeds: [renderEmbed(currentPage)],
-            components: [renderSelectMenu(currentPage), renderButtons()],
-          });
-        } else if (i.customId === 'select_item') {
-          const selectedId = parseInt(i.values[0]);
-          const item = items.find(it => it.id === selectedId);
-          if (!item) {
-            return await i.reply({ content: '❌ Invalid item selected.', ephemeral: true });
-          }
-          basket.push(item);
-          await i.reply({ content: `🛍️ Added **${item.name}** to basket!`, ephemeral: true });
-        } else if (i.customId === 'checkout') {
-          const total = basket.reduce((sum, item) => sum + item.price, 0);
-          if (player.currency < total) {
-            return i.reply({ content: `❌ Not enough Dumz Dollars! You need ${total}, but only have ${player.currency}.`, ephemeral: true });
-          }
+      collector.on('collect', async (selectInteraction) => {
+        const selectedCategory = selectInteraction.values[0];
+        const items = rows.filter((item) => item.category === selectedCategory);
   
-          try {
-            await client.database_connection.query(
-              'UPDATE players SET currency = currency - ? WHERE id = ?',
-              [total, player.id]
+        const embeds = items.map((item) => {
+          return new EmbedBuilder()
+            .setTitle(item.name)
+            .setDescription(`**Price:** ${item.price} Dumz Dollars\n**Quantity:** ${item.quantity}`)
+            .setThumbnail(item.image)
+            .addFields(
+              { name: 'Short Name', value: item.shortname, inline: true },
+              { name: 'Reward Type', value: item.reward_type, inline: true }
             );
-          } catch (err) {
-            console.error('Failed to deduct currency:', err);
-            return i.reply({ content: '❌ Failed to process your purchase. Please try again later.', ephemeral: true });
-          }
+        });
   
-          for (const item of basket) {
-            if (item.reward_type === 'kit') {
-              const server = await client.functions.get_server(client, player.server);
-              await client.rce.servers.command(server.identifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
-            }
-          }
+        const buttons = items.map((item) =>
+          new ButtonBuilder()
+            .setCustomId(`shop_add_${item.id}`)
+            .setLabel(`Add ${item.name}`)
+            .setStyle('Primary')
+        );
   
-          collector.stop();
-          return i.update({
-            content: `✅ You successfully purchased:\n${basket.map(i => `• ${i.name} (${i.price} 💰)`).join('\n')}\nNew balance: **${player.currency - total}** 💰`,
-            embeds: [],
-            components: [],
-          });
+        const buttonRows = [];
+        for (let i = 0; i < buttons.length; i += 5) {
+          buttonRows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
         }
+  
+        await selectInteraction.update({
+          content: `Category: **${selectedCategory}**`,
+          embeds,
+          components: buttonRows,
+        });
+  
+        const basketCollector = msg.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+          time: 60000,
+        });
+  
+        const userBasket = [];
+  
+        basketCollector.on('collect', async (buttonInteraction) => {
+          if (!buttonInteraction.customId.startsWith('shop_add_')) return;
+          const itemId = buttonInteraction.customId.split('_')[2];
+          const selectedItem = rows.find((i) => i.id == itemId);
+          if (!selectedItem) {
+            return buttonInteraction.reply({
+              content: 'Item not found.',
+              ephemeral: true,
+            });
+          }
+  
+          userBasket.push(selectedItem);
+          await buttonInteraction.reply({
+            content: `✅ Added **${selectedItem.name}** to your basket.`,
+            ephemeral: true,
+          });
+  
+          const basketTotal = userBasket.reduce((acc, item) => acc + item.price, 0);
+  
+          const checkoutRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('checkout').setLabel(`Checkout (${basketTotal})`).setStyle('Success')
+          );
+  
+          await interaction.editReply({ components: [...buttonRows, checkoutRow] });
+        });
+  
+        basketCollector.on('end', () => {
+          interaction.editReply({ components: [] });
+        });
+  
+        collector.stop();
       });
   
-      collector.on('end', async () => {
-        await interaction.editReply({
-          content: '⏳ Shop session expired. Please use `/shop` to start again.',
-          embeds: [],
-          components: [],
+      const checkoutCollector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 120000,
+      });
+  
+      checkoutCollector.on('collect', async (buttonInteraction) => {
+        if (buttonInteraction.customId !== 'checkout') return;
+  
+        const [userRow] = await client.database_connection.query(
+          'SELECT * FROM players WHERE discord_id = ? LIMIT 1',
+          [interaction.user.id]
+        );
+  
+        const user = userRow[0];
+        if (!user) {
+          return buttonInteraction.reply({
+            content: 'You are not registered. Please link your account first.',
+            ephemeral: true,
+          });
+        }
+  
+        const basketTotal = userBasket.reduce((acc, item) => acc + item.price, 0);
+  
+        if (user.currency < basketTotal) {
+          return buttonInteraction.reply({
+            content: `❌ You don’t have enough Dumz Dollars. You need **${basketTotal}**, but only have **${user.currency}**.`,
+            ephemeral: true,
+          });
+        }
+  
+        for (const item of userBasket) {
+          if (item.quantity <= 0) continue;
+  
+          await client.database_connection.execute(
+            'UPDATE players SET currency = currency - ? WHERE discord_id = ?',
+            [item.price, interaction.user.id]
+          );
+  
+          await client.database_connection.execute(
+            'UPDATE shop_items SET quantity = quantity - 1 WHERE id = ?',
+            [item.id]
+          );
+  
+          if (item.reward_type === 'kit') {
+            await client.rce.servers.giveKit(user.server, user.region, user.display_name, item.shortname);
+          }
+        }
+  
+        await buttonInteraction.reply({
+          content: '🎉 Purchase complete! Your items have been delivered (if applicable).',
+          ephemeral: true,
         });
+  
+        await interaction.editReply({ components: [] });
       });
     },
   };
+  
