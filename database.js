@@ -64,6 +64,18 @@ class STATS {
                     );`,
       },
       {
+        name: 'shop',
+        query:'
+        CREATE TABLE shop_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50),
+        description TEXT,
+        price INT,
+        reward_type ENUM('role', 'kit', 'code'),
+        reward_value VARCHAR(100)
+      );',
+    }
+      {
         name: 'servers',
         query: `
                     CREATE TABLE IF NOT EXISTS servers (
