@@ -185,46 +185,77 @@ query: `
       });
   }
 
-  async populateShopItems() {
+  async function populateShopItemsFromJSON() {
+    const path = require('path');
+    const fs = require('fs');
+  
     try {
-      const items = JSON.parse(fs.readFileSync('./items.json', 'utf-8'));
-      const itemsData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-      for (const item of itemsData) {
-        const [existing] = await this.client.database_connection.execute(
-          'SELECT * FROM shop_items WHERE name = ?',
-          [item.name]
+      const filePath = path.join(__dirname, 'items.json');
+      const rawData = fs.readFileSync(filePath);
+      const items = JSON.parse(rawData);
+  
+      for (const item of items) {
+        await client.database_connection.execute(
+          `INSERT INTO shop_items (name, description, reward_type, reward_value, price, issue, quantity, available_on_shop)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            item.name,
+            item.description || '',
+            item.reward_type || 'kit',
+            item.reward_value || item.name,
+            item.price || 0,
+            item.issue || '',
+            item.quantity || 0,
+            item.available_on_shop || false,
+          ]
         );
-
-        if (existing.length === 0) {
-          await this.client.database_connection.execute(
-            `INSERT INTO shop_items (name, description, price, reward_type, reward_value, issue, quantity, available_on_shop)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              item.name,
-              item.description || '',
-              0,
-              item.reward_type || 'kit',
-              item.reward_value || item.name,
-              '',
-              9999,
-              0
-            ]
-          );
-        }
       }
-
-      await this.client.functions.log(
-        'info',
-        `\x1b[34;1m[DATABASE]\x1b[0m Shop items populated from items.json!`
-      );
+  
+      console.log('[DATABASE] shop_items populated successfully.');
     } catch (err) {
-      await this.client.functions.log(
-        'error',
-        `\x1b[34;1m[DATABASE]\x1b[0m Failed to populate shop_items: ${err.message}`
-      );
+      console.error('[DATABASE] Failed to populate shop_items:', err.message);
     }
   }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
 
 module.exports = STATS;
