@@ -81,7 +81,7 @@ class STATS {
           reward_value VARCHAR(100),
           price INT DEFAULT 0,
           quantity INT DEFAULT 1,
-          available_on_shop BOOLEAN DEFAULT FALSE
+          available_on_shop BOOLEAN DEFAULT TRUE
 );
           
           
