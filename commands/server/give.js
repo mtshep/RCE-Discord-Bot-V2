@@ -62,15 +62,36 @@ const {
   
       async function handleGive(serverIdentifier) {
         const itemFormatted = isNaN(itemId) ? `"${itemId}"` : itemId;
+        const shortName = itemId;
+        const memberName = player;
   
         try {
-          console.log(`[GIVE TEST] ➤ Sending: item.give "${player}" ${itemFormatted} ${quantity} to ${serverIdentifier}`);
-          const result = await client.rce.servers.command(serverIdentifier, `item.give "${player}" ${itemFormatted} ${quantity}`);
-          await interaction.reply({ content: `✅ Sent ${quantity} of ${itemId} to ${player} on ${serverIdentifier}.`, ephemeral: true });
-          console.log(`[GIVE TEST] ✅ RCE result:`, result);
-        } catch (err) {
-          console.error(`[GIVE TEST] ❌ Error while sending to ${serverIdentifier}:`, err.message, err.stack);
-          await interaction.reply({ content: `❌ Failed to give item: ${err.message}`, ephemeral: true });
+          await client.rce.servers.command(serverIdentifier, `inventory.give ${memberName} ${itemFormatted} ${quantity}`);
+  
+          const itemImageUrl = await client.functions.get_item_image(itemId);
+  
+          await client.functions.send_embed(
+            client,
+            serverIdentifier,
+            `✅ ${serverIdentifier} - Item Granted`,
+            `The following item was successfully given to ${memberName}:`,
+            [
+              { name: 'Receiver', value: `👤 ${memberName}`, inline: true },
+              {
+                name: 'Time',
+                value: `🕜 <t:${Math.floor(Date.now() / 1000)}:R>`,
+                inline: true,
+              },
+              { name: 'Item Granted', value: `***${shortName}***`, inline: true },
+              { name: 'Quantity', value: `**${quantity}**`, inline: true },
+              { name: 'Server ID', value: `\`${serverIdentifier}\``, inline: true },
+            ],
+            itemImageUrl
+          );
+  
+          await interaction.reply({ content: `✅ Gave ${quantity}x ${shortName} to ${memberName} on server ${serverIdentifier}.`, ephemeral: true });
+        } catch (error) {
+          await interaction.reply({ content: `❌ Failed to give item on server ${serverIdentifier}.`, ephemeral: true });
         }
       }
     },
