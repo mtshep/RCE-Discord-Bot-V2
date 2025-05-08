@@ -41,8 +41,8 @@ module.exports = {
     }
 
     const serverOptions = serverRows.map(server => ({
-      label: server.name,
-      value: server.id.toString(),
+      label: String(server.name ?? `Server ${server.id}`),
+      value: String(server.id),
     }));
 
     // Step 2: Ask user to select servers
