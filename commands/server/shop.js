@@ -66,7 +66,7 @@ module.exports = {
       time: 60_000,
     });
 
-    const selectedServerIds = selection.values.map(v => parseInt(v));
+    const selectedServerIdentifiers = selection.values;
 
     await selection.update({ content: '✅ Servers selected! Loading shop...', components: [] });
 
@@ -178,7 +178,6 @@ module.exports = {
             for (const serverIdentifier of selectedServerIdentifiers) {
               await client.rce.servers.command(serverIdentifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
             }
-        
           }
         }
 
