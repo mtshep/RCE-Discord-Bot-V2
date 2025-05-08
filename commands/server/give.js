@@ -54,11 +54,12 @@ const {
       const itemFormatted = isNaN(itemId) ? `"${itemId}"` : itemId;
   
       try {
+        console.log(`[GIVE TEST] ➤ Sending: item.give "${player}" ${itemFormatted} ${quantity} to ${serverIdentifier}`);
         const result = await client.rce.servers.command(serverIdentifier, `item.give "${player}" ${itemFormatted} ${quantity}`);
         await selection.update({ content: `✅ Sent ${quantity} of ${itemId} to ${player} on ${serverIdentifier}.`, components: [] });
         console.log(`[GIVE TEST] ✅ RCE result:`, result);
       } catch (err) {
-        console.error(`[GIVE TEST] ❌ Error:`, err);
+        console.error(`[GIVE TEST] ❌ Error while sending to ${serverIdentifier}:`, err.message, err.stack);
         await selection.update({ content: `❌ Failed to give item: ${err.message}`, components: [] });
       }
     },
