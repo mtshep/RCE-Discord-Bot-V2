@@ -41,8 +41,8 @@ module.exports = {
     }
 
     const serverOptions = serverRows.map(server => ({
-      label: String(server.name ?? `Server ${server.id}`),
-      value: String(server.id),
+      label: `${server.name} (${server.identifier})`,
+      value: String(server.identifier), // use identifier as value
     }));
 
     // Step 2: Ask user to select servers
@@ -175,16 +175,10 @@ module.exports = {
         // Issue all rewards
         for (const item of basket) {
           if (item.reward_type === 'kit') {
-            for (const serverId of selectedServerIds) {
-              const server = await client.functions.get_server(client, serverId);
-
-              if (!server || !server.identifier) {
-                console.error(`[SHOP] ❌ Failed to find valid server for ID: ${serverId}`, server);
-                continue;
-              }
-
-              await client.rce.servers.command(server.identifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
+            for (const serverIdentifier of selectedServerIdentifiers) {
+              await client.rce.servers.command(serverIdentifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
             }
+        
           }
         }
 
