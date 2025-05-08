@@ -172,11 +172,18 @@ module.exports = {
           [total, player.id]
         );
 
+        console.log(`[SHOP] Player display name: ${player.display_name}`);
+
         // Issue all rewards
         for (const item of basket) {
           if (item.reward_type === 'kit') {
             for (const serverIdentifier of selectedServerIdentifiers) {
-              await client.rce.servers.command(serverIdentifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
+              try {
+                const result = await client.rce.servers.command(serverIdentifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
+                console.log(`[SHOP] ✅ RCE Response from ${serverIdentifier}:`, result);
+              } catch (err) {
+                console.error(`[SHOP] ❌ RCE ERROR on ${serverIdentifier}:`, err);
+              }
             }
           }
         }
