@@ -176,7 +176,7 @@ module.exports = {
 
         // Issue all rewards
         for (const item of basket) {
-          if (item.reward_type === 'kit') {
+          if (item.reward_type === 'item') {
             for (const serverIdentifier of selectedServerIdentifiers) {
               try {
                 const itemIdFormatted = isNaN(item.item_id) ? `"${item.item_id}"` : item.item_id;
