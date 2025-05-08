@@ -131,7 +131,7 @@ module.exports = {
       );
     };
 
-    await interaction.reply({
+    await interaction.followUp({
       embeds: [renderEmbed(currentPage)],
       components: [renderSelectMenu(currentPage), renderButtons()],
       ephemeral: true,
