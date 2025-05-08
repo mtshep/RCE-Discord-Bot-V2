@@ -177,6 +177,12 @@ module.exports = {
           if (item.reward_type === 'kit') {
             for (const serverId of selectedServerIds) {
               const server = await client.functions.get_server(client, serverId);
+
+              if (!server || !server.identifier) {
+                console.error(`[SHOP] ❌ Failed to find valid server for ID: ${serverId}`, server);
+                continue;
+              }
+
               await client.rce.servers.command(server.identifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
             }
           }
