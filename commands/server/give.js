@@ -29,7 +29,7 @@ const {
       // Ask user to select a server
       const serverOptions = servers.map(s => ({
         label: `${s.name} (${s.server_id})`,
-        value: s.server_id,
+        value: String(s.server_id),
       }));
   
       const row = new ActionRowBuilder().addComponents(
