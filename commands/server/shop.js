@@ -179,7 +179,7 @@ module.exports = {
           if (item.reward_type === 'kit') {
             for (const serverIdentifier of selectedServerIdentifiers) {
               try {
-                const result = await client.rce.servers.command(serverIdentifier, `item.give "${player.display_name}" "${item.reward_value}" 1`);
+                const result = await client.rce.servers.command(serverIdentifier, `item.give "${player.display_name}" ${item.item_id} 1`);
                 console.log(`[SHOP] ✅ RCE Response from ${serverIdentifier}:`, result);
               } catch (err) {
                 console.error(`[SHOP] ❌ RCE ERROR on ${serverIdentifier}:`, err);
