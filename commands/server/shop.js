@@ -23,10 +23,10 @@ module.exports = {
 
     if (!playerRows.length) {
       return interaction.reply({
-        content: 'âš ï¸ You must be linked to use the shop.',
+        content: '⚠️ You must be linked to use the shop.',
         ephemeral: true,
-      }
-
+      });
+    }
 
     // Step 1: Fetch available servers
     const [serverRows] = await client.database_connection.query(
@@ -35,7 +35,7 @@ module.exports = {
 
     if (!serverRows.length) {
       return interaction.reply({
-        content: 'âš ï¸ No servers are available.',
+        content: '⚠️ No servers are available.',
         ephemeral: true,
       });
     }
@@ -56,7 +56,7 @@ module.exports = {
     );
 
     await interaction.reply({
-      content: 'ðŸŒ Please select one or more servers:',
+      content: '🌐 Please select one or more servers:',
       components: [serverSelectMenu],
       ephemeral: true,
     });
@@ -68,10 +68,7 @@ module.exports = {
 
     const selectedServerIds = selection.values.map(v => parseInt(v));
 
-    await selection.update({ content: 'âœ… Servers selected! Loading shop...', components: [] });
-
-);
-    }
+    await selection.update({ content: '✅ Servers selected! Loading shop...', components: [] });
 
     const player = playerRows[0];
 
@@ -81,7 +78,7 @@ module.exports = {
     );
 
     if (!items.length) {
-      return interaction.reply({ content: 'ðŸš« No items are currently for sale.', ephemeral: true });
+      return interaction.reply({ content: '🛫 No items are currently for sale.', ephemeral: true });
     }
 
     // Group by category
@@ -96,14 +93,14 @@ module.exports = {
 
     const renderEmbed = (page) => {
       const embed = new EmbedBuilder()
-        .setTitle(`ðŸ›’ ${pages[page].category} Shop`)
+        .setTitle(`🛒 ${pages[page].category} Shop`)
         .setDescription(`Select an item to add to your basket.\nYour Dumz Balance: **${player.currency}**`)
         .setFooter({ text: `Page ${page + 1} of ${pages.length}` })
         .setColor('Green');
 
       for (const item of pages[page].items.slice(0, 10)) {
         embed.addFields({
-          name: `${item.name} - ${item.price} ðŸ’°`,
+          name: `${item.name} - ${item.price} 💠`,
           value: item.description || item.shortname || 'No description',
         });
       }
@@ -120,7 +117,7 @@ module.exports = {
             pages[page].items.slice(0, 25).map(item => ({
               label: item.name,
               value: item.id.toString(),
-              description: `Price: ${item.price} ðŸ’°`,
+              description: `Price: ${item.price} 💠`,
             }))
           )
       );
@@ -128,9 +125,9 @@ module.exports = {
 
     const renderButtons = () => {
       return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('prev').setLabel('â¬…ï¸ Prev').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId('checkout').setLabel('âœ… Checkout').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('next').setLabel('âž¡ï¸ Next').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('prev').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('checkout').setLabel('✅ Checkout').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('next').setLabel('➡️ Next').setStyle(ButtonStyle.Secondary)
       );
     };
 
@@ -162,11 +159,11 @@ module.exports = {
         const selectedId = parseInt(i.values[0]);
         const item = items.find(it => it.id === selectedId);
         basket.push(item);
-        await i.reply({ content: `ðŸ›ï¸ Added **${item.name}** to basket!`, ephemeral: true });
+        await i.reply({ content: `🛍️ Added **${item.name}** to basket!`, ephemeral: true });
       } else if (i.customId === 'checkout') {
         const total = basket.reduce((sum, item) => sum + item.price, 0);
         if (player.currency < total) {
-          return i.reply({ content: `âŒ Not enough Dumz Dollars! You need ${total}, but only have ${player.currency}.`, ephemeral: true });
+          return i.reply({ content: `❌ Not enough Dumz Dollars! You need ${total}, but only have ${player.currency}.`, ephemeral: true });
         }
 
         // Deduct currency
@@ -178,14 +175,16 @@ module.exports = {
         // Issue all rewards
         for (const item of basket) {
           if (item.reward_type === 'kit') {
-            const server = await client.functions.get_server(client, player.server);
-            await client.rce.servers.command(server.identifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
+            for (const serverId of selectedServerIds) {
+              const server = await client.functions.get_server(client, serverId);
+              await client.rce.servers.command(server.identifier, `kit.give "${player.display_name}" "${item.reward_value}"`);
+            }
           }
         }
 
         collector.stop();
         return i.update({
-          content: `âœ… You successfully purchased:\n${basket.map(i => `â€¢ ${i.name} (${i.price} ðŸ’°)`).join('\n')}\nNew balance: **${player.currency - total}** ðŸ’°`,
+          content: `✅ You successfully purchased:\n${basket.map(i => `• ${i.name} (${i.price} 💠)`).join('\n')}\nNew balance: **${player.currency - total}** 💠`,
           embeds: [],
           components: [],
         });
