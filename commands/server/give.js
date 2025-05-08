@@ -21,15 +21,15 @@ const {
       const quantity = interaction.options.getInteger('quantity');
   
       // Fetch servers
-      const [servers] = await client.database_connection.query('SELECT * FROM servers');
+      const [servers] = await client.database_connection.query('SELECT name, identifier FROM servers');
       if (!servers.length) {
         return interaction.reply({ content: '❌ No servers found.', ephemeral: true });
       }
   
       // Ask user to select a server
       const serverOptions = servers.map(s => ({
-        label: `${s.name} (${s.server_id})`,
-        value: String(s.server_id),
+        label: `${s.name} (${s.identifier})`,
+        value: s.identifier,
       }));
   
       const row = new ActionRowBuilder().addComponents(
@@ -50,16 +50,16 @@ const {
         time: 60_000,
       });
   
-      const serverId = selection.values[0];
+      const serverIdentifier = selection.values[0];
       const itemFormatted = isNaN(itemId) ? `"${itemId}"` : itemId;
   
       try {
-        console.log(`[GIVE TEST] ➤ Sending: item.give "${player}" ${itemFormatted} ${quantity} to ${serverId}`);
-        const result = await client.rce.servers.command(serverId, `item.give "${player}" ${itemFormatted} ${quantity}`);
-        await selection.update({ content: `✅ Sent ${quantity} of ${itemId} to ${player} on ${serverId}.`, components: [] });
+        console.log(`[GIVE TEST] ➤ Sending: item.give "${player}" ${itemFormatted} ${quantity} to ${serverIdentifier}`);
+        const result = await client.rce.servers.command(serverIdentifier, `item.give "${player}" ${itemFormatted} ${quantity}`);
+        await selection.update({ content: `✅ Sent ${quantity} of ${itemId} to ${player} on ${serverIdentifier}.`, components: [] });
         console.log(`[GIVE TEST] ✅ RCE result:`, result);
       } catch (err) {
-        console.error(`[GIVE TEST] ❌ Error while sending to ${serverId}:`, err.message, err.stack);
+        console.error(`[GIVE TEST] ❌ Error while sending to ${serverIdentifier}:`, err.message, err.stack);
         await selection.update({ content: `❌ Failed to give item: ${err.message}`, components: [] });
       }
     },
