@@ -16,7 +16,7 @@ module.exports = {
 
     try {
       // Send the command to get the list of kits
-      const kitListRaw = await interaction.client.rce.sendCommand(
+      const kitListRaw = await interaction.client.rce.command.send(
         server.identifier,
         'kit list'
       );
@@ -27,7 +27,7 @@ module.exports = {
       const embeds = [];
 
       for (const kitName of kitListResponse) {
-        const kitInfoRaw = await interaction.client.rce.sendCommand(
+        const kitInfoRaw = await interaction.client.rce.command.send(
           server.identifier,
           `kit info "${kitName}"`
         );
