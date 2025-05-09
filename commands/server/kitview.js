@@ -28,10 +28,12 @@ module.exports = {
     try {
       let kitListRaw;
       try {
-        kitListRaw = await interaction.client.rce.servers.command(
+        const kitListResult = await interaction.client.rce.servers.command(
           server.identifier,
           'kit list'
         );
+
+        const kitListRaw = kitListResult?.response;
 
         console.log('[KITS] kitListRaw:', kitListRaw, 'Type:', typeof kitListRaw);
 
