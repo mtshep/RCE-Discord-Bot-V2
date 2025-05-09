@@ -9,10 +9,21 @@ module.exports = {
     const guildId = interaction.guild.id;
     const playerName = interaction.member.displayName;
 
-    const server = await interaction.client.functions.get_server_discord(
-      interaction.client,
-      guildId
-    );
+    console.log('[KITS] Fetching kits for guild:', guildId);
+
+    let server;
+    try {
+      server = await interaction.client.functions.get_server_discord(
+        interaction.client,
+        guildId
+      );
+    } catch (error) {
+      console.error('[KITS] Failed to get server discord:', error);
+      return await interaction.reply({
+        content: '⚠️ Failed to retrieve server information.',
+        ephemeral: true
+      });
+    }
 
     try {
       let kitListRaw;
@@ -31,6 +42,8 @@ module.exports = {
 
       const kitListResponse = kitListRaw.replace('[KITMANAGER] Kit list\n', '').split('\n').filter(k => k);
 
+      console.log('[KITS] Retrieved kit list:', kitListResponse);
+
       // Fetch item details for each kit
       const embeds = [];
 
@@ -41,6 +54,7 @@ module.exports = {
             server.identifier,
             `kit info "${kitName}"`
           );
+          console.log('[KITS] Retrieved kit info for:', kitName);
         } catch (err) {
           console.error(`[KITS] Failed to retrieve info for kit ${kitName}:`, err);
           continue; // Skip this kit and move on to the next
@@ -70,6 +84,7 @@ module.exports = {
         if (imageRow && imageRow.image) embed.setThumbnail(imageRow.image);
 
         embeds.push(embed);
+        console.log('[KITS] Embed created for kit:', kitName);
       }
 
       // Paginate embeds (first page only shown for now)
