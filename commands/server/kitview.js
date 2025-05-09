@@ -15,11 +15,19 @@ module.exports = {
     );
 
     try {
-      // Send the command to get the list of kits
-      const kitListRaw = await interaction.client.rce.servers.command(
-        server.identifier,
-        'kit list'
-      );
+      let kitListRaw;
+      try {
+        kitListRaw = await interaction.client.rce.servers.command(
+          server.identifier,
+          'kit list'
+        );
+      } catch (err) {
+        console.error('[KITS] Failed to retrieve kit list:', err);
+        return await interaction.reply({
+          content: '⚠️ Failed to retrieve kit list.',
+          ephemeral: true
+        });
+      }
 
       const kitListResponse = kitListRaw.replace('[KITMANAGER] Kit list\n', '').split('\n').filter(k => k);
 
@@ -27,10 +35,16 @@ module.exports = {
       const embeds = [];
 
       for (const kitName of kitListResponse) {
-        const kitInfoRaw = await interaction.client.rce.servers.command(
-          server.identifier,
-          `kit info "${kitName}"`
-        );
+        let kitInfoRaw;
+        try {
+          kitInfoRaw = await interaction.client.rce.servers.command(
+            server.identifier,
+            `kit info "${kitName}"`
+          );
+        } catch (err) {
+          console.error(`[KITS] Failed to retrieve info for kit ${kitName}:`, err);
+          continue; // Skip this kit and move on to the next
+        }
 
         const infoLines = kitInfoRaw.split('\n').slice(2); // Skip headers
         const fields = infoLines.map(line => {
