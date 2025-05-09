@@ -1,23 +1,38 @@
-async execute(interaction) {
-  const player = interaction.options.getString('player');
-  const item = interaction.options.getString('item');
-  const amount = interaction.options.getInteger('amount');
+const { Events } = require('discord.js');
 
-  try {
-    console.log("↪ player:", player, "item:", item, "amount:", amount);
-    await interaction.reply(`📦 Giving ${amount}x \`${item}\` to \`${player}\`...`);
+module.exports = {
+  name: Events.ClientReady,
+  async execute(client) {
+    try {
+      start_random_items_interval(client);
+    } catch (error) {
+      await log_initialization_error(client, error);
+    }
+  },
+};
 
-    const command = `inventory.give "${player}" "${item}" ${amount}`;
-    const result = await interaction.client.rce.command.send(
-      interaction.client.session,
-      process.env.SERVER_ID,
-      command
-    );
-    console.log("📥 Server response:", result);
+async function start_random_items_interval(client) {
+  setInterval(async () => {
+    const servers = await client.rce.servers.getAll();
+    servers.forEach(async (server) => {
+      const current_server = await client.functions.get_server(
+        client,
+        server.identifier
+      );
+      if (current_server.random_items === 0) return;
+      await client.functions.trigger_random_item(
+        client,
+        current_server,
+        server.players
+      );
+    });
+  }, 1 * 20 * 1000);
+}
 
-    await interaction.editReply(`✅ Done: \`${command}\`\n🖥️ Server Response: ${result.message || 'Success'}`);
-  } catch (err) {
-    console.error('🔥 Command failed:', err);
-    await interaction.editReply(`❌ Failed: ${err.message}`);
-  }
+async function log_initialization_error(client, error) {
+  await client.functions.log(
+    'error',
+    `\x1b[34;1m[BOT]\x1b[0m Failed To Initialize Random Items: ${error.message}`,
+    error
+  );
 }

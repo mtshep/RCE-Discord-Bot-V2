@@ -27,12 +27,12 @@ module.exports = {
       console.log("↪ player:", player, "item:", item, "amount:", amount);
       await interaction.reply(`📦 Giving ${amount}x \`${item}\` to \`${player}\`...`);
 
-      console.log("🔐 Attempting to login...");
-      const session = await RCE.login(process.env.GPORTAL_EMAIL, process.env.GPORTAL_PASSWORD);
-      console.log("✅ Session:", session);
-      console.log("🛠️ SERVER_ID:", process.env.SERVER_ID);
       const command = `inventory.give "${player}" "${item}" ${amount}`;
-      const result = await RCE.sendCommand(session, process.env.SERVER_ID, command);
+      const result = await interaction.client.rce.command.send(
+        interaction.client.session,
+        process.env.SERVER_ID,
+        command
+      );
       console.log("📥 Server response:", result);
 
       await interaction.editReply(`✅ Done: \`${command}\`\n🖥️ Server Response: ${result.message || 'Success'}`);
