@@ -32,6 +32,20 @@ module.exports = {
           server.identifier,
           'kit list'
         );
+
+        console.log('[KITS] kitListRaw:', kitListRaw, 'Type:', typeof kitListRaw);
+
+        if (typeof kitListRaw !== 'string') {
+          console.error('[KITS] Unexpected kitListRaw type:', typeof kitListRaw);
+          return await interaction.reply({
+            content: '⚠️ Failed to retrieve kit list. Unexpected response format.',
+            ephemeral: true
+          });
+        }
+
+        const kitListResponse = kitListRaw.replace('[KITMANAGER] Kit list\n', '').split('\n').filter(k => k);
+
+        console.log('[KITS] Retrieved kit list:', kitListResponse);
       } catch (err) {
         console.error('[KITS] Failed to retrieve kit list:', err);
         return await interaction.reply({
@@ -39,10 +53,6 @@ module.exports = {
           ephemeral: true
         });
       }
-
-      const kitListResponse = kitListRaw.replace('[KITMANAGER] Kit list\n', '').split('\n').filter(k => k);
-
-      console.log('[KITS] Retrieved kit list:', kitListResponse);
 
       // Fetch item details for each kit
       const embeds = [];
