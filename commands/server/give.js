@@ -1,7 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { RCE } = require('rce.js');
-
-const rce = new RCE();
+const RCE = require('rce.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -28,9 +26,9 @@ module.exports = {
     try {
       await interaction.reply(`📦 Giving ${amount}x \`${item}\` to \`${player}\`...`);
       
-      const session = await rce.login(process.env.GPORTAL_EMAIL, process.env.GPORTAL_PASSWORD);
+      const session = await RCE.login(process.env.GPORTAL_EMAIL, process.env.GPORTAL_PASSWORD);
       const command = `inventory.give "${player}" "${item}" ${amount}`;
-      const result = await rce.sendCommand(session, process.env.SERVER_ID, command);
+      const result = await RCE.sendCommand(session, process.env.SERVER_ID, command);
 
       await interaction.editReply(`✅ Done: \`${command}\`\n🖥️ Server Response: ${result.message || 'Success'}`);
     } catch (err) {
