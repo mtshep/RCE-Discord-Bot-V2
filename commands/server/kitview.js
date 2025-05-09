@@ -13,6 +13,14 @@ module.exports = {
 
     let servers;
     try {
+      if (!interaction.client.functions?.get_servers_for_guild) {
+        console.error('[KITS] get_servers_for_guild is not defined on client.functions');
+        return await interaction.reply({
+          content: '⚠️ Failed to retrieve your linked servers. Function not implemented.',
+          ephemeral: true,
+        });
+      }
+
       servers = await interaction.client.functions.get_servers_for_guild(interaction.client, guildId);
     } catch (error) {
       console.error('[KITS] Failed to get servers for guild:', error);
