@@ -1,113 +1,152 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
-  ButtonBuilder,
   ActionRowBuilder,
+  StringSelectMenuBuilder,
+  ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
 } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('kits')
-    .setDescription('View all available kits and their contents'),
+    .setDescription('View available kits on a selected server'),
 
-  async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+  async execute(interaction, client) {
+    const userId = interaction.user.id;
 
-    const guildId = interaction.guild.id;
-    const server = await interaction.client.functions.get_server_discord(
-      interaction.client,
-      guildId
+    const [playerRows] = await client.database_connection.query(
+      'SELECT * FROM players WHERE discord_id = ?',
+      [userId]
     );
 
-    try {
-      const kitsList = await interaction.client.rce.servers.command(
-        server.identifier,
-        `kit list`
-      );
-
-      const kitNames = kitsList?.split('\n').filter(name => name.trim()) || [];
-
-      if (!kitNames.length) {
-        return await interaction.editReply({
-          content: '⚠️ No kits found.',
-        });
-      }
-
-      const kitEmbeds = [];
-
-      for (const kitName of kitNames) {
-        const kitDetails = await interaction.client.rce.servers.command(
-          server.identifier,
-          `kit info "${kitName}"`
-        );
-
-        const [rows] = await interaction.client.database_connection.query(
-          'SELECT * FROM shop_items WHERE name = ? AND reward_type = "kit"',
-          [kitName]
-        );
-
-        const image = rows[0]?.image || null;
-
-        const embed = new EmbedBuilder()
-          .setTitle(`🎒 Kit: ${kitName}`)
-          .setDescription(kitDetails || 'No details available')
-          .setColor('Blue')
-          .setFooter({ text: 'Use /shop to purchase kits' });
-
-        if (image) embed.setThumbnail(image);
-
-        kitEmbeds.push(embed);
-      }
-
-      // Pagination
-      let currentPage = 0;
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('prev_kit')
-          .setLabel('⬅️ Previous')
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId('next_kit')
-          .setLabel('➡️ Next')
-          .setStyle(ButtonStyle.Secondary)
-      );
-
-      const message = await interaction.editReply({
-        embeds: [kitEmbeds[currentPage]],
-        components: kitEmbeds.length > 1 ? [row] : [],
-        fetchReply: true,
-      });
-
-      if (kitEmbeds.length < 2) return;
-
-      const collector = message.createMessageComponentCollector({
-        filter: i => i.user.id === interaction.user.id,
-        time: 120_000,
-      });
-
-      collector.on('collect', async i => {
-        if (i.customId === 'next_kit') {
-          currentPage = (currentPage + 1) % kitEmbeds.length;
-        } else if (i.customId === 'prev_kit') {
-          currentPage = (currentPage - 1 + kitEmbeds.length) % kitEmbeds.length;
-        }
-
-        await i.update({
-          embeds: [kitEmbeds[currentPage]],
-          components: [row],
-        });
-      });
-
-      collector.on('end', async () => {
-        await message.edit({ components: [] });
-      });
-    } catch (err) {
-      console.error('[KITS ERROR]', err);
-      await interaction.editReply({
-        content: '❌ An error occurred while fetching kits.',
+    if (!playerRows.length) {
+      return interaction.reply({
+        content: '⚠️ You must be linked to use this command.',
+        ephemeral: true,
       });
     }
+
+    const [servers] = await client.database_connection.query('SELECT * FROM servers');
+    if (!servers.length) {
+      return interaction.reply({
+        content: '⚠️ No servers are available.',
+        ephemeral: true,
+      });
+    }
+
+    const serverOptions = servers.map((s) => ({
+      label: `${s.identifier} (${s.region})`,
+      value: s.identifier,
+    }));
+
+    const serverSelectMenu = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('select_kits_server')
+        .setPlaceholder('Select server')
+        .setMinValues(1)
+        .setMaxValues(1)
+        .addOptions(serverOptions)
+    );
+
+    await interaction.reply({
+      content: '🌐 Please select a server:',
+      components: [serverSelectMenu],
+      ephemeral: true,
+    });
+
+    const selection = await interaction.channel.awaitMessageComponent({
+      filter: (i) => i.user.id === userId && i.customId === 'select_kits_server',
+      time: 30_000,
+    });
+
+    const serverId = selection.values[0];
+    await selection.update({ content: 'Fetching kits...', components: [] });
+
+    // Step 1: Get kits using `kit list`
+    const kitListResponse = await client.rce.servers.command(serverId, 'kit list');
+    const kitNames = kitListResponse
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => line.trim());
+
+    const kits = [];
+
+    for (const name of kitNames) {
+      try {
+        const info = await client.rce.servers.command(serverId, `kit info "${name}"`);
+        const itemList = info
+          .split('\n')
+          .slice(1)
+          .filter((line) => line.trim() !== '')
+          .map((line) => line.trim());
+
+        // Find matching shop item for image
+        const [[shopItem]] = await client.database_connection.query(
+          'SELECT image FROM shop_items WHERE reward_type = "kit" AND reward_value = ? LIMIT 1',
+          [name]
+        );
+
+        kits.push({
+          name,
+          items: itemList,
+          image: shopItem?.image || null,
+        });
+      } catch (err) {
+        console.error(`Error fetching info for kit "${name}":`, err.message);
+      }
+    }
+
+    if (!kits.length) {
+      return await interaction.followUp({
+        content: '❌ No kits found on the selected server.',
+        ephemeral: true,
+      });
+    }
+
+    // Pagination
+    let current = 0;
+
+    const renderEmbed = (index) => {
+      const kit = kits[index];
+      const embed = new EmbedBuilder()
+        .setTitle(`🎒 Kit: ${kit.name}`)
+        .setDescription(kit.items.length ? kit.items.join('\n') : 'No items found.')
+        .setFooter({ text: `Kit ${index + 1} of ${kits.length}` })
+        .setColor('Blue');
+
+      if (kit.image) embed.setThumbnail(kit.image);
+      return embed;
+    };
+
+    const renderButtons = () => {
+      return new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('prev_kit').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('next_kit').setLabel('➡️ Next').setStyle(ButtonStyle.Secondary)
+      );
+    };
+
+    const message = await interaction.followUp({
+      embeds: [renderEmbed(current)],
+      components: [renderButtons()],
+      ephemeral: true,
+    });
+
+    const collector = message.createMessageComponentCollector({
+      time: 60_000,
+      filter: (i) => i.user.id === userId,
+    });
+
+    collector.on('collect', async (i) => {
+      if (i.customId === 'prev_kit') {
+        current = (current - 1 + kits.length) % kits.length;
+      } else if (i.customId === 'next_kit') {
+        current = (current + 1) % kits.length;
+      }
+      await i.update({
+        embeds: [renderEmbed(current)],
+        components: [renderButtons()],
+      });
+    });
   },
 };
