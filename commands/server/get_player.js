@@ -8,19 +8,30 @@ module.exports = {
     .addStringOption(option =>
       option
         .setName('server')
-        .setDescription('The server to query')
-        .setRequired(false)
+        .setDescription('Select a server')
+        .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   async execute(interaction) {
     const server = interaction.options.getString('server');
 
+    if (!server) {
+      await interaction.reply('❌ No server selected.');
+      return;
+    }
+
     try {
       const command = `global.users`;
       const result = await interaction.client.rce.servers.command(
-        process.env.SERVER_ID,
+        server,
         command
       );
+
+      if (!result.ok || !result.response) {
+        await interaction.reply('❌ Failed to fetch players: Invalid server response.');
+        return;
+      }
 
       console.log("📥 Server response:", result);
 
@@ -39,7 +50,7 @@ module.exports = {
         return cleaned;
       }
 
-      const cleaned = parseUserList(result);
+      const cleaned = parseUserList(result.response);
 
       if (cleaned.length === 0) {
         await interaction.reply('📋 No players found on the server.');
