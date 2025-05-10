@@ -5,7 +5,11 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('getplayers')
     .setDescription('Rust Players Location')
-   
+    .addStringOption(option =>
+      option
+        .setName('server')
+        .setDescription('The server to query')
+        .setRequired(true)
     ),
 
   async execute(interaction) {
@@ -18,24 +22,34 @@ module.exports = {
         process.env.SERVER_ID,
         command
       );
+
       console.log("📥 Server response:", result);
 
       function parseUserList(rawInput) {
+        if (!rawInput.includes('<slot:"name">')) {
+          throw new Error('Unexpected server response format.');
+        }
+
         // Extract everything after `<slot:"name">` and split by newline
         const cleaned = rawInput
-          .split('<slot:"name">')[1] // get text after the header
-          .split('\\n')              // split into lines
-          .map(name => name.replace(/"/g, '').trim()) // remove quotes and trim
-          .filter(name => name && !name.endsWith('users')); // remove empty and count line
+          .split('<slot:"name">')[1] // Get text after the header
+          .split('\\n')              // Split into lines
+          .map(name => name.replace(/"/g, '').trim()) // Remove quotes and trim
+          .filter(name => name && !name.endsWith('users')); // Remove empty and count line
 
         return cleaned;
       }
 
       const cleaned = parseUserList(result);
-      await interaction.reply(`📋 Players:\n${cleaned.join('\n')}`);
+
+      if (cleaned.length === 0) {
+        await interaction.reply('📋 No players found on the server.');
+      } else {
+        await interaction.reply(`📋 Players:\n${cleaned.join('\n')}`);
+      }
     } catch (err) {
       console.error('🔥 Command failed:', err);
-      await interaction.reply(`❌ Failed: ${err.message}`);
+      await interaction.reply(`❌ Failed to fetch players: ${err.message}`);
     }
   }
 };
