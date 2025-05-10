@@ -68,32 +68,20 @@ class STATS {
           );`,
       },
       {
-        name: 'shop',
+        name: 'shop_items',
         query: `
           CREATE TABLE IF NOT EXISTS shop_items (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          item_id VARCHAR(50),           
-          name VARCHAR(100),             
-          shortname VARCHAR(100),        
-          image TEXT,                    
-          category VARCHAR(100),         
-          reward_type VARCHAR(50) DEFAULT 'kit',
-          reward_value VARCHAR(100),
-          price INT DEFAULT 0,
-          quantity INT DEFAULT 1,
-          available_on_shop BOOLEAN DEFAULT TRUE
-);
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
-        `,
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255),
+            description TEXT,
+            price INT,
+            reward_type VARCHAR(50),
+            reward_value VARCHAR(255),
+            category VARCHAR(100),
+            available_on_shop BOOLEAN DEFAULT TRUE,
+            shortname VARCHAR(100),
+            quantity INT DEFAULT 1
+          );`,
       },
       {
         name: 'servers',
