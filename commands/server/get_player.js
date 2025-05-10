@@ -17,8 +17,7 @@ module.exports = {
 
     try {
       const command = `global.users`;
-      const result = await interaction.client.rce.command.send(
-        interaction.client.session,
+      const result = await interaction.client.rce.servers.command(
         process.env.SERVER_ID,
         command
       );
