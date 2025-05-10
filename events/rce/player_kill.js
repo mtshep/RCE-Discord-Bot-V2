@@ -300,7 +300,7 @@ async function send_kill_feed(
     await client.functions.send_embed(
       client,
       current_server.kill_feeds_channel_id,
-      `${server.identifier} - New Kill`,
+      `🔫 DumzParadise Bot - Kill Feed`,
       '',
       [
         { name: 'Killer', value: `👤 ${killer_name}`, inline: true },
@@ -317,7 +317,7 @@ async function send_kill_feed(
       kill_feeds[Math.floor(Math.random() * kill_feeds.length)];
     await client.rce.servers.command(
       server.identifier,
-      `say <color=green><b>[KILL]</b></color> ${kill_message}<br><color=green><color=white>(</color>Kills: <color=white>${killer_kill_count}</color> <color=red>|</color> Deaths: <color=white>${killer_death_count}</color> <color=red>|</color> K/D: <color=white>${kd_ratio}</color>)</color>`
+      `say <color=#00ffaa><b>[DUMZ PARADISE BOT - NEW DEATH]</b></color> ${kill_message}<br><color=#00ffaa><color=white>(</color>Kills: <color=white>${killer_kill_count}</color> <color=red>|</color> Deaths: <color=white>${killer_death_count}</color> <color=red>|</color> K/D: <color=white>${kd_ratio}</color>)</color>`
     );
   } catch (err) {
     await client.functions.log(
