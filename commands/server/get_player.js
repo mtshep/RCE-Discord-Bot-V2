@@ -9,7 +9,7 @@ module.exports = {
       option
         .setName('server')
         .setDescription('The server to query')
-        .setRequired(true)
+        .setRequired(false)
     ),
 
   async execute(interaction) {
