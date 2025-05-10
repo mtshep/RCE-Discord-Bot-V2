@@ -5,11 +5,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('getplayers')
     .setDescription('Rust Players Location')
-    .addStringOption(option =>
-      option
-        .setName('server')
-        .setDescription('The server to query')
-        .setRequired(true)
+   
     ),
 
   async execute(interaction) {
