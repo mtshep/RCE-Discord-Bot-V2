@@ -4,6 +4,7 @@ const path = require('path');
 class STATS {
   constructor(client) {
     this.client = client;
+    this.populateShopItems = this.populateShopItems.bind(this);
     this.init();
   }
 
@@ -72,15 +73,14 @@ class STATS {
         query: `
           CREATE TABLE IF NOT EXISTS shop_items (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255),
-            description TEXT,
+            item_id VARCHAR(255) NOT NULL,
+            image VARCHAR(255),
+            displayname VARCHAR(255),
+            shortname TEXT,
             price INT,
-            reward_type VARCHAR(50),
-            reward_value VARCHAR(255),
             category VARCHAR(100),
             available_on_shop BOOLEAN DEFAULT TRUE,
-            shortname VARCHAR(100),
-            quantity INT DEFAULT 1
+            buyingquantity INT DEFAULT 1
           );`,
       },
       {
@@ -190,39 +190,39 @@ class STATS {
 
       for (const item of items) {
         try {
-          // Ensure all fields have valid values or default to null
-          const id = item.id || null;
-          const name = item.displayName || null;
+          const item_id = item.id || null;
+          const displayname = item.displayName || null;
           const shortname = item.shortName || null;
           const image = item.image || null;
-          const rewardType = item.reward_type || 'kit'; // Default value
-          const rewardValue = item.reward_value || null;
-          const price = item.price || 0; // Default value
-          const quantity = item.quantity || 1; // Default value
-          const availableOnShop = item.available_on_shop !== undefined ? item.available_on_shop : true;
+          const price = item.price || 0;
+          const category = item.category || null;
+          const available_on_shop = item.available_on_shop !== undefined ? item.available_on_shop : true;
+          const buyingquantity = item.quantity || 1;
+
+          // Check if item_id already exists
+          const [existing] = await this.client.database_connection.execute(
+            'SELECT 1 FROM shop_items WHERE item_id = ? LIMIT 1',
+            [item_id]
+          );
+
+          if (existing.length > 0) {
+            console.log(`[SHOP] Skipping existing item: ${item_id}`);
+            continue;
+          }
 
           await this.client.database_connection.execute(
-            `INSERT INTO shop_items (item_id, name, shortname, image, category, reward_type, reward_value, price, quantity, available_on_shop)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE 
-               name=VALUES(name), shortname=VALUES(shortname), image=VALUES(image),
-               category=VALUES(category), reward_type=VALUES(reward_type), reward_value=VALUES(reward_value),
-               price=VALUES(price), quantity=VALUES(quantity), available_on_shop=VALUES(available_on_shop)`,
-            [item.id, name, shortname, image, item.category || null, rewardType, rewardValue, price, quantity, availableOnShop]
+            `INSERT INTO shop_items (item_id, displayname, shortname, image, category, price, available_on_shop, buyingquantity)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [item_id, displayname, shortname, image, category, price, available_on_shop, buyingquantity]
           );
-        
         } catch (err) {
-          // Improved error logging
-          await this.client.functions.log(
-            'error',
-            `[DATABASE] Failed to insert item: ${JSON.stringify(item)} - Error: ${err.message}`
-          );
+          console.error(`[SHOP] Failed to insert item: ${item.displayName} - ${err.message}`);
         }
       }
 
-      await this.client.functions.log('debug', '[DATABASE] shop_items populated successfully.');
+      console.log('[SHOP] Finished populating shop items.');
     } catch (err) {
-      await this.client.functions.log('error', '[DATABASE] Failed to populate shop_items: ' + err.message);
+      console.error(`[SHOP] Failed to read items.json: ${err.message}`);
     }
   }
 }
