@@ -61,5 +61,21 @@ module.exports = {
       console.error('🔥 Command failed:', err);
       await interaction.reply(`❌ Failed to fetch players: ${err.message}`);
     }
+  },
+
+  async autocomplete(interaction) {
+    const focusedValue = interaction.options.getFocused();
+
+    // Get servers from the database
+    const [rows] = await interaction.client.database_connection.query(`SELECT identifier FROM servers WHERE enabled = 1`);
+
+    const choices = rows.map(row => row.identifier);
+    const filtered = choices
+      .filter(choice => choice.toLowerCase().includes(focusedValue.toLowerCase()))
+      .slice(0, 25); // Max 25 choices allowed
+
+    await interaction.respond(
+      filtered.map(choice => ({ name: choice, value: choice }))
+    );
   }
 };
