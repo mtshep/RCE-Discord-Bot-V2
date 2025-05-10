@@ -50,12 +50,14 @@ module.exports = {
         return cleaned;
       }
 
+      console.log('[DEBUG] Raw response from server:', result.response);
       const cleaned = parseUserList(result.response);
 
       if (cleaned.length === 0) {
         await interaction.reply('📋 No players found on the server.');
       } else {
-        await interaction.reply(`📋 Players:\n${cleaned.join('\n')}`);
+        const formattedList = cleaned.map((name, index) => `\`${index + 1}.\` ${name}`).join('\n');
+        await interaction.reply({ content: `📋 **Players on \`${server}\`**:\n${formattedList}`, ephemeral: true });
       }
     } catch (err) {
       console.error('🔥 Command failed:', err);
