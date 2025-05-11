@@ -25,7 +25,8 @@ module.exports = {
             const isPlayerList = logContent.includes('<slot:"name">') && /\n\d+users\n?$/.test(logContent);
 
             if (isPlayerList) {
-              responseText = logContent;
+              responseText = logContent.trim();
+              client.functions.log('debug', `[${server.identifier}] Matched Log Content:\n${responseText}`);
             } else {
               client.functions.log('debug', `[${server.identifier}] Ignored LogMessage: ${logContent}`);
             }
@@ -33,6 +34,7 @@ module.exports = {
 
           client.rce.events.on('LogMessage', logHandler);
           await client.rce.servers.command(server.identifier, 'global.users');
+          client.functions.log('debug', `[${server.identifier}] Sent command: global.users`);
 
           await new Promise((resolve) => setTimeout(resolve, 3000));
           client.rce.events.off('LogMessage', logHandler);
@@ -74,6 +76,7 @@ module.exports = {
               client.functions.log('error', `[LIVE PLAYER] Failed location insert for ${name}: ${err.message}`);
             }
           }
+          client.functions.log('debug', `[${server.identifier}] Sync cycle completed`);
         } catch (err) {
           client.functions.log('error', `[LIVE PLAYER] Server loop error for ${server.identifier}: ${err.message}`);
         }
