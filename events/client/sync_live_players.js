@@ -16,13 +16,15 @@ module.exports = {
           let responseText = null;
 
           const logHandler = async (data) => {
-            if (
-              data.identifier !== server.identifier ||
-              !data.message.includes('<slot:"name">') ||
-              !/\n\d+users\n?$/.test(data.message)
-            ) return;
+            if (data.identifier !== server.identifier) return;
 
-            responseText = data.message;
+            const isPlayerList = data.message.includes('<slot:"name">') && /\n\d+users\n?$/.test(data.message);
+
+            if (isPlayerList) {
+              responseText = data.message;
+            } else {
+              client.functions.log('debug', `[${server.identifier}] Ignored LogMessage: ${data.message}`);
+            }
           };
 
           client.rce.events.on('LogMessage', logHandler);
