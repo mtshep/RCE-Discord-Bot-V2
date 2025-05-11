@@ -1,3 +1,4 @@
+global.crypto = require('crypto');
 const { Events } = require('discord.js');
 const cron = require('node-cron');
 
