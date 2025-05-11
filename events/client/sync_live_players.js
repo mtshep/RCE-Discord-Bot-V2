@@ -17,8 +17,10 @@ module.exports = {
           const result = await client.rce.servers.command(server.identifier, usersCommand);
 
           if (!result.ok || typeof result.response !== 'string') {
+            console.log(`[LIVE PLAYER] Raw result for ${server.identifier}:`, result);
             client.functions.log('warning', `[${server.identifier}] Failed to fetch player list.`);
-            client.functions.log('debug', `[${server.identifier}] Raw response: ${JSON.stringify(result)}`);
+            client.functions.log('debug', `[${server.identifier}] result.ok: ${result.ok}, response type: ${typeof result.response}`);
+            client.functions.log('debug', `[${server.identifier}] Full response: ${JSON.stringify(result, null, 2)}`);
             continue;
           }
 
