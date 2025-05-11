@@ -342,8 +342,8 @@ class STATS {
       if (exists) {
         // Update the player's stat column
         await this.client.database_connection.execute(
-          `UPDATE players SET ${statColumn} = ${statColumn} + 1 WHERE display_name = ? AND server = ? AND region = ?`,
-          [player_name, server_identifier.serverId[0], server_identifier.region]
+          `UPDATE players SET ${statColumn} = ${statColumn} + 1 WHERE display_name = ? AND server = ?`,
+          [player_name, server_identifier.serverId[0]]
         );
       }
     } catch (err) {
@@ -358,8 +358,8 @@ class STATS {
   async player_exists(server, player_name) {
     // Check if the player exists
     const [result] = await this.client.database_connection.execute(
-      `SELECT COUNT(*) as count FROM players WHERE display_name = ? AND server = ? AND region = ?`,
-      [player_name, server.serverId[0], server.region]
+      `SELECT COUNT(*) as count FROM players WHERE display_name = ? AND server = ? `,
+      [player_name, server.serverId[0]]
     );
 
     if (result[0].count > 0) {
@@ -389,12 +389,11 @@ class STATS {
       if (exists) {
         // If the player already existed, update the points
         await this.client.database_connection.execute(
-          `UPDATE players SET currency = currency + ? WHERE display_name = ? AND server = ? AND region = ?`,
+          `UPDATE players SET currency = currency + ? WHERE display_name = ? AND server = ?`,
           [
             amount,
             player_name,
             server_identifier.serverId[0],
-            server_identifier.region,
           ]
         );
       }
@@ -413,8 +412,8 @@ class STATS {
       if (exists) {
         // If the player already existed, update the points
         const [result] = await this.client.database_connection.execute(
-          `UPDATE players SET currency = currency - ? WHERE display_name = ? AND server = ? AND region = ?`,
-          [amount, player_name, server.serverId[0], server.region]
+          `UPDATE players SET currency = currency - ? WHERE display_name = ? AND server = ?`,
+          [amount, player_name, server.serverId[0]]
         );
       }
     } catch (err) {
@@ -432,8 +431,8 @@ class STATS {
 
       // Retrieve the player's points (whether they existed or were just created)
       const [results] = await this.client.database_connection.execute(
-        `SELECT currency FROM players WHERE display_name = ? AND server = ? AND region = ?`,
-        [player_name, server.serverId[0], server.region]
+        `SELECT currency FROM players WHERE display_name = ? AND server = ?`,
+        [player_name, server.serverId[0]]
       );
 
       return results.length > 0 ? results[0].currency : 0;
