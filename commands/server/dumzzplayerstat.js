@@ -1,3 +1,4 @@
+const { PlayerStatsPlugin } = require('../../../plugins/PlayerStatsPlugin');
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {

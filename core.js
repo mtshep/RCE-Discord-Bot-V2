@@ -3,6 +3,7 @@ const { REST, Routes } = require('discord.js');
 require('dotenv').config();
 const fs = require('fs');
 const { RCEManager, LogLevel, RCEIntent } = require('rce.js');
+const { PlayerStatsPlugin } = require('rce.js-playerstats');
 const stats = require('./database.js');
 const { createPool } = require('mysql2/promise');
 
@@ -262,6 +263,8 @@ class rce_bot {
     try {
       // Initialize RCE manager with server details
       this.client.rce = new RCEManager();
+      this.client.rce.registerPlugin('playerstats', new PlayerStatsPlugin());
+
       await this.client.rce.init(
         {
           username: process.env.GPORTAL_EMAIL,
