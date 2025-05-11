@@ -18,12 +18,15 @@ module.exports = {
           const logHandler = async (data) => {
             if (data.identifier !== server.identifier) return;
 
-            const isPlayerList = data.message.includes('<slot:"name">') && /\n\d+users\n?$/.test(data.message);
+            client.functions.log('debug', `[${server.identifier}] Full LogMessage Data: ${JSON.stringify(data)}`);
+
+            const logContent = data.message || data.text || data.content || '';
+            const isPlayerList = logContent.includes('<slot:"name">') && /\n\d+users\n?$/.test(logContent);
 
             if (isPlayerList) {
-              responseText = data.message;
+              responseText = logContent;
             } else {
-              client.functions.log('debug', `[${server.identifier}] Ignored LogMessage: ${data.message}`);
+              client.functions.log('debug', `[${server.identifier}] Ignored LogMessage: ${logContent}`);
             }
           };
 
