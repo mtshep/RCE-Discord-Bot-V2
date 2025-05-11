@@ -5,26 +5,35 @@ const cron = require('node-cron');
 module.exports = {
   name: Events.ClientReady,
   once: true,
-  async execute(client) {
-    client.functions.log('info', '[LIVE PLAYER] Player location sync started. Running every 2 minutes.');
+
 
     cron.schedule('*/2 * * * *', async () => {
       const servers = client.servers;
 
       for (const server of servers) {
         try {
-          const usersCommand = 'global.users';
-          const result = await client.rce.servers.command(server.identifier, usersCommand);
+          let responseText = null;
 
-          if (!result.ok || typeof result.response !== 'string') {
-            console.log(`[LIVE PLAYER] Raw result for ${server.identifier}:`, result);
-            client.functions.log('warning', `[${server.identifier}] Failed to fetch player list.`);
-            client.functions.log('debug', `[${server.identifier}] result.ok: ${result.ok}, response type: ${typeof result.response}`);
-            client.functions.log('debug', `[${server.identifier}] Full response: ${JSON.stringify(result, null, 2)}`);
+          const logHandler = async (data) => {
+            if (data.identifier !== server.identifier) return;
+            if (!data.message.includes('<slot:"name">')) return;
+
+            responseText = data.message;
+          };
+
+          client.rce.events.on('LogMessage', logHandler);
+          await client.rce.servers.command(server.identifier, 'global.users');
+
+          // Wait a few seconds for response
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          client.rce.events.off('LogMessage', logHandler);
+
+          if (!responseText) {
+            client.functions.log('warning', `[${server.identifier}] Failed to fetch player list from logs.`);
             continue;
           }
 
-          const rawNames = result.response.split('<slot:"name">')[1];
+          const rawNames = responseText.split('<slot:"name">')[1];
           if (!rawNames) continue;
 
           const names = rawNames
