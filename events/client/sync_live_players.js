@@ -17,7 +17,7 @@ module.exports = {
 
           const logHandler = async (data) => {
             if (data.identifier !== server.identifier) return;
-            if (!data.message.includes('<slot:"name">')) return;
+            if (!data.message.includes('<slot:"name">') || !data.message.includes('users\\n')) return;
 
             responseText = data.message;
           };
@@ -33,7 +33,7 @@ module.exports = {
             continue;
           }
 
-          const rawNames = responseText.split('<slot:"name">')[1];
+          const rawNames = responseText.split('<slot:"name">')[1].split('users\\n')[0];
           if (!rawNames) continue;
 
           const names = rawNames
