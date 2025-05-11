@@ -17,7 +17,7 @@ module.exports = {
 
           const logHandler = async (data) => {
             if (data.identifier !== server.identifier) return;
-            if (!data.message.includes('<slot:"name">') || !data.message.includes('users\\n')) return;
+            if (!data.message.includes('<slot:"name">') || !data.message.trim().endsWith('users')) return;
 
             responseText = data.message;
           };
@@ -33,13 +33,12 @@ module.exports = {
             continue;
           }
 
-          const rawNames = responseText.split('<slot:"name">')[1].split('users\\n')[0];
+          const rawNames = responseText.split('<slot:"name">')[1].split('\n').slice(0, -1);
           if (!rawNames) continue;
 
           const names = rawNames
-            .split('\\n')
             .map(n => n.replace(/\"/g, '').trim())
-            .filter(name => name && !name.endsWith('users'));
+            .filter(name => name && !/^\d+users$/.test(name));
 
           await client.database_connection.execute(
             'DELETE FROM live_player WHERE server = ?',
