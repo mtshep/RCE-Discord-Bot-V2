@@ -18,7 +18,8 @@ module.exports = {
           const logHandler = async (data) => {
             if (data.identifier !== server.identifier) return;
 
-            client.functions.log('debug', `[${server.identifier}] Full LogMessage Data: ${JSON.stringify(data)}`);
+            client.functions.log('debug', `[${server.identifier}] Log Payload Keys: ${Object.keys(data).join(', ')}`);
+            client.functions.log('debug', `[${server.identifier}] Raw Log Payload: ${JSON.stringify(data, null, 2)}`);
 
             const logContent = data.message || data.text || data.content || '';
             const isPlayerList = logContent.includes('<slot:"name">') && /\n\d+users\n?$/.test(logContent);
