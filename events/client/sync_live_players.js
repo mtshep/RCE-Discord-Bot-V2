@@ -1,11 +1,12 @@
-global.crypto = require('crypto');
 const { Events } = require('discord.js');
 const cron = require('node-cron');
+global.crypto = require('crypto');
 
 module.exports = {
   name: Events.ClientReady,
   once: true,
-
+  async execute(client) {
+    client.functions.log('info', '💬 [LIVE PLAYER] Player location sync started. Running every 2 minutes.');
 
     cron.schedule('*/2 * * * *', async () => {
       const servers = client.servers;
@@ -24,7 +25,6 @@ module.exports = {
           client.rce.events.on('LogMessage', logHandler);
           await client.rce.servers.command(server.identifier, 'global.users');
 
-          // Wait a few seconds for response
           await new Promise((resolve) => setTimeout(resolve, 3000));
           client.rce.events.off('LogMessage', logHandler);
 
