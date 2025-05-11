@@ -256,6 +256,8 @@ async function update_player_stats(
   victim,
   current_server
 ) {
+  if (killer.type !== PlayerKillType.Player || victim.type !== PlayerKillType.Player) return;
+
   await Promise.all([
     client.player_stats.insert_player(killer.name, server),
     client.player_stats.insert_player(victim.name, server),

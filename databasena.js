@@ -356,12 +356,15 @@ class STATS {
   }
 
   async player_exists(server, player_name) {
-  const [result] = await this.client.database_connection.execute(
-    `SELECT COUNT(*) as count FROM players WHERE display_name = ? AND server = ?`,
-    [player_name, server.serverId[0]]
-  );
-  return result[0].count > 0;
-} else {
+    // Check if the player exists
+    const [result] = await this.client.database_connection.execute(
+      `SELECT COUNT(*) as count FROM players WHERE display_name = ? AND server = ? `,
+      [player_name, server.serverId[0]]
+    );
+
+    if (result[0].count > 0) {
+      return true; // Player exists
+    } else {
       // Player does not exist, insert a new record
       await this.client.database_connection.execute(
         `INSERT INTO players (display_name, server, region, currency) VALUES (?, ?, ?, ?)`,
