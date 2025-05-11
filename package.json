@@ -32,7 +32,7 @@
     "dotenv": "^16.4.5",
     "mysql-sync": "^0.0.5",
     "mysql2": "^3.9.2",
+    "node-cron": "^4.0.0",
     "rce.js": "github:b1nzeex/rce.js"
-    
   }
 }
