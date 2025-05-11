@@ -32,7 +32,7 @@ module.exports = {
           client.rce.events.off('LogMessage', logHandler);
 
           if (!responseText) {
-            client.functions.log('warning', `[${server.identifier}] Failed to fetch player list from logs.`);
+            client.functions.log('warning', `[${server.identifier}] Failed to fetch player list from logs. Raw response: ${responseText}`);
             continue;
           }
 
