@@ -1416,9 +1416,9 @@ async function create_settings_embed(client, identifier) {
         inline: true,
       }, // Blank field
       {
-        name: 'Random Items',
-        value: server.random_items != 1 ? '**Enabled**' : '**Disabled**',
-        inline: true,
+       name: 'Random Items',
+      value: server.random_items ? '**Enabled**' : '**Disabled**',
+      inline: true,
       },
       {
         name: 'Raid Alerts',
