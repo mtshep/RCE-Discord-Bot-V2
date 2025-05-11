@@ -18,6 +18,7 @@ module.exports = {
 
           if (!result.ok || typeof result.response !== 'string') {
             client.functions.log('warning', `[${server.identifier}] Failed to fetch player list.`);
+            client.functions.log('debug', `[${server.identifier}] Raw response: ${JSON.stringify(result)}`);
             continue;
           }
 
