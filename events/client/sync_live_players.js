@@ -15,42 +15,46 @@ module.exports = {
           const usersCommand = 'global.users';
           const result = await client.rce.servers.command(server.identifier, usersCommand);
 
-          if (!result.ok || !result.response || typeof result.response !== 'string') {
+          if (!result.ok || typeof result.response !== 'string') {
             client.functions.log('warning', `[${server.identifier}] Failed to fetch player list.`);
             continue;
           }
 
-          const names = result.response
-            .split('<slot:"name">')[1]
-            ?.split('\\n')
-            .map(n => n.replace(/\"/g, '').trim())
-            .filter(name => name && !name.endsWith('users')) || [];
+          const rawNames = result.response.split('<slot:"name">')[1];
+          if (!rawNames) continue;
 
-          await client.database_connection.execute('DELETE FROM live_player WHERE server = ?', [server.identifier]);
+          const names = rawNames
+            .split('\\n')
+            .map(n => n.replace(/\"/g, '').trim())
+            .filter(name => name && !name.endsWith('users'));
+
+          await client.database_connection.execute(
+            'DELETE FROM live_player WHERE server = ?',
+            [server.identifier]
+          );
 
           for (const name of names) {
             try {
               const locationCommand = `player.location "${name}"`;
               const locationResult = await client.rce.servers.command(server.identifier, locationCommand);
 
-              if (!locationResult.ok || !locationResult.response) continue;
+              if (!locationResult.ok || typeof locationResult.response !== 'string') continue;
 
-              const coords = locationResult.response.match(/\[(\d+\.\d+), (\d+\.\d+), (\d+\.\d+)\]/);
-              if (!coords) continue;
+              const coordsMatch = locationResult.response.match(/\[(\d+\.\d+), (\d+\.\d+), (\d+\.\d+)\]/);
+              if (!coordsMatch) continue;
 
-              const [, x, y, z] = coords.map(Number);
+              const [, x, y, z] = coordsMatch.map(Number);
 
               await client.database_connection.execute(
-                `INSERT INTO live_player (name, server, x, y, z) VALUES (?, ?, ?, ?, ?)`,
+                'INSERT INTO live_player (name, server, x, y, z) VALUES (?, ?, ?, ?, ?)',
                 [name, server.identifier, x, y, z]
               );
             } catch (err) {
-              client.functions.log('error', `[LIVE PLAYER] Failed to get or insert location for ${name}: ${err.message}`);
+              client.functions.log('error', `[LIVE PLAYER] Failed location insert for ${name}: ${err.message}`);
             }
           }
-
         } catch (err) {
-          client.functions.log('error', `[LIVE PLAYER] Error in loop for ${server.identifier}: ${err.message}`);
+          client.functions.log('error', `[LIVE PLAYER] Server loop error for ${server.identifier}: ${err.message}`);
         }
       }
     });
