@@ -16,8 +16,11 @@ module.exports = {
           let responseText = null;
 
           const logHandler = async (data) => {
-            if (data.identifier !== server.identifier) return;
-            if (!data.message.includes('<slot:"name">') || !data.message.trim().endsWith('users')) return;
+            if (
+              data.identifier !== server.identifier ||
+              !data.message.includes('<slot:"name">') ||
+              !/\n\d+users\n?$/.test(data.message)
+            ) return;
 
             responseText = data.message;
           };
