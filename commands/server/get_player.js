@@ -22,7 +22,7 @@ module.exports = {
     }
 
     try {
-      const command = `global.users`;
+      const command = `global.playerlist`;
       const result = await interaction.client.rce.servers.command(
         server,
         command

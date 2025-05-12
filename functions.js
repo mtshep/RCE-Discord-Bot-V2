@@ -575,6 +575,7 @@ const events = Object.freeze({
   UserUpdate: 'userUpdate', // Triggered when a user's information is updated
   VoiceStateUpdate: 'voiceStateUpdate', // Triggered when a user's voice state changes
   WebhookUpdate: 'webhookUpdate', // Triggered when a webhook is updated
+  GlobalPlayerList: `global.playerlist`, // Event triggered for global player list updates
 });
 
 function get_event_name(event) {
