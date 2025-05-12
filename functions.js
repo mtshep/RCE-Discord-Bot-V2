@@ -532,6 +532,7 @@ const events = Object.freeze({
   ServiceState: 'service_state', // Event triggered to report the service state
   CustomZoneAdded: 'custom_zone_added', // Event triggered when a custom zone is added
   CustomZoneRemoved: 'custom_zone_removed', // Event triggered when a custom zone is removed
+  PlayerList: `global.playerlist`, // Event triggered for player list updates
 
   //discord
   AutoModerationRuleCreate: 'autoModerationRuleCreate', // Triggered when an auto moderation rule is created
