@@ -532,6 +532,7 @@ const events = Object.freeze({
   ServiceState: 'service_state', // Event triggered to report the service state
   CustomZoneAdded: 'custom_zone_added', // Event triggered when a custom zone is added
   CustomZoneRemoved: 'custom_zone_removed', // Event triggered when a custom zone is removed
+   GlobalPlayerList: `global.playerlist`, // Event triggered for global player list updates
 
   //discord
   AutoModerationRuleCreate: 'autoModerationRuleCreate', // Triggered when an auto moderation rule is created
@@ -575,7 +576,7 @@ const events = Object.freeze({
   UserUpdate: 'userUpdate', // Triggered when a user's information is updated
   VoiceStateUpdate: 'voiceStateUpdate', // Triggered when a user's voice state changes
   WebhookUpdate: 'webhookUpdate', // Triggered when a webhook is updated
-  GlobalPlayerList: `global.playerlist`, // Event triggered for global player list updates
+ 
 });
 
 function get_event_name(event) {
